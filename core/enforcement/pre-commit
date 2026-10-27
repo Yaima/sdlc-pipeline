@@ -1,0 +1,47 @@
+#!/usr/bin/env bash
+# SDLC pipeline pre-commit check (tool-agnostic). Install:
+#   ln -sf ../../docs/pipeline/enforcement/pre-commit .git/hooks/pre-commit
+# Env: SDLC_HUMAN=1 (a person is committing), SDLC_ROLE=test-writer, SDLC_ALLOW_CONFIG=1.
+set -u
+ROOT=$(git rev-parse --show-toplevel)
+CFG="$ROOT/docs/pipeline/pipeline.json"; [ -f "$CFG" ] || CFG="$ROOT/.claude/pipeline.json"
+[ -f "$CFG" ] || exit 0
+command -v jq >/dev/null || { echo "sdlc pre-commit: jq missing, skipping checks" >&2; exit 0; }
+MODE=$(jq -r '.commit_mode // "human"' "$CFG")
+BRANCH=$(git rev-parse --abbrev-ref HEAD)
+deny() { echo "sdlc pre-commit: DENIED. $1" >&2; exit 1; }
+
+# 1. protected branches
+while IFS= read -r p; do
+  [ -z "$p" ] && continue
+  re=$(printf '%s' "$p" | sed -e 's/\./\\./g' -e 's#\*#.*#g')
+  printf '%s' "$BRANCH" | grep -Eq "^${re}$" && deny "branch '$BRANCH' is protected; commit on a feature branch."
+done < <(jq -r '.protected_branches[]? // empty' "$CFG")
+
+# 2. human-only commits
+if [ "$MODE" = "human" ] && [ "${SDLC_HUMAN:-}" != "1" ]; then
+  deny "commit_mode=human: only a person commits. If that is you: SDLC_HUMAN=1 git commit ... (do not export it globally where agents inherit it)."
+fi
+
+# 3. tests and config frozen while a feature is being implemented
+active=$(grep -l '"stage": *"implement"' "$ROOT"/docs/features/*/state.json 2>/dev/null | head -1)
+[ -z "$active" ] && exit 0
+match_any() {
+  local g re
+  while IFS= read -r g; do
+    [ -z "$g" ] && continue
+    re=$(printf '%s' "$g" | sed -e 's/\./\\./g' -e 's/[][^$+?(){}|]/\\&/g' -e 's#\*\*/#\x01#g' -e 's#\*\*#\x02#g' -e 's#\*#\x03#g' -e 's#\x01#(.*/)?#g' -e 's#\x02#.*#g' -e 's#\x03#[^/]*#g')
+    printf '%s' "$2" | grep -Eq "^${re}$" && return 0
+  done < <(jq -r "$1[]? // empty" "$CFG")
+  return 1
+}
+while IFS= read -r f; do
+  [ -z "$f" ] && continue
+  if [ "${SDLC_ROLE:-}" != "test-writer" ] && match_any '.test_globs' "$f"; then
+    deny "$f is a test file and $(basename "$(dirname "$active")") is in stage implement. Only the test-writer role edits tests (SDLC_ROLE=test-writer), or record a test dispute in tasks.md."
+  fi
+  if [ "${SDLC_ALLOW_CONFIG:-}" != "1" ] && match_any '.protected_config_globs' "$f"; then
+    deny "$f is protected config (CI, lint, pipeline) while a feature is in implement. SDLC_ALLOW_CONFIG=1 if a person is changing it on purpose."
+  fi
+done < <(git diff --cached --name-only)
+exit 0

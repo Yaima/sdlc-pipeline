@@ -1,0 +1,20 @@
+{
+  "slug": "<slug>",
+  "mode": "standard",
+  "stage": "grill",
+  "review_round": 0,
+  "max_review_rounds": 3,
+  "last_verdict": null,
+  "blast_radius": null,
+  "spec_sha": null,
+  "data_model_sha": null,
+  "base_branch": "main",
+  "feature_branch": "feat/<slug>",
+  "ticket": null,
+  "waived_findings": [],
+  "handoffs": [],
+  "cost_usd": 0,
+  "history": [],
+  "related": [],
+  "last_reviewed_files": {}
+}

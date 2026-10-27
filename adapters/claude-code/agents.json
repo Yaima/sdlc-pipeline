@@ -1,0 +1,74 @@
+{
+  "architect": {
+    "description": "Writes the technical spec, data-model.md when the data model changes, and the ordered task list from a reviewed PRD. Use for engineering handoff.",
+    "tools": "Read, Grep, Glob, Write, Bash(git *), Bash(ls *), Bash(find *)",
+    "model": "opus",
+    "maxTurns": "50",
+    "guard_mode": "docs-only",
+    "reviewer_inputs_guard": false
+  },
+  "test-writer": {
+    "description": "Writes failing tests for one task from tasks.md, using the repo's existing test conventions. Edits test files only.",
+    "tools": "Read, Grep, Glob, Write, Edit, Bash",
+    "model": "opus",
+    "maxTurns": "40",
+    "guard_mode": "tests-only",
+    "reviewer_inputs_guard": false
+  },
+  "retro": {
+    "description": "After a feature ships, reads its review-log, qa-report, and agent-runs.log and proposes edits to rules, agents, and CLAUDE.md so the same mistakes are not repeated. Proposes; the user applies.",
+    "tools": "Read, Grep, Glob, Bash(git *)",
+    "model": "opus",
+    "maxTurns": "30",
+    "guard_mode": "docs-only",
+    "reviewer_inputs_guard": false
+  },
+  "requirements-analyst": {
+    "description": "Checks a PRD against the real codebase for feasibility, conflicts, gaps, and reuse. Use after a PRD exists and before any design or code.",
+    "tools": "Read, Grep, Glob, Bash(git *), Bash(ls *), Bash(find *), Bash(wc *)",
+    "model": "opus",
+    "maxTurns": "40",
+    "guard_mode": "docs-only",
+    "reviewer_inputs_guard": false
+  },
+  "qa-engineer": {
+    "description": "Writes and runs acceptance tests per PRD requirement on an approved branch, black-box where possible. Use after code review approves.",
+    "tools": "Read, Grep, Glob, Write, Edit, Bash",
+    "model": "sonnet",
+    "maxTurns": "60",
+    "guard_mode": null,
+    "reviewer_inputs_guard": false
+  },
+  "implementer": {
+    "description": "Implements one task from tasks.md to make its failing tests pass, or fixes blocker/major findings from a review round. Edits source files only; test files and CI/lint config are read-only (hook enforced).",
+    "tools": "Read, Grep, Glob, Write, Edit, Bash",
+    "model": "opus",
+    "maxTurns": "80",
+    "guard_mode": "tests-readonly",
+    "reviewer_inputs_guard": false
+  },
+  "product-manager": {
+    "description": "Turns an idea into a PRD with numbered, testable requirements. Use at the start of a feature or when requirements are vague.",
+    "tools": "Read, Grep, Glob, Write, Bash(git log *), Bash(git ls-files *)",
+    "model": "opus",
+    "maxTurns": "30",
+    "guard_mode": "docs-only",
+    "reviewer_inputs_guard": false
+  },
+  "code-reviewer": {
+    "description": "Independent review of a feature branch against its PRD and spec. Reads the diff, runs the tests itself, checks requirement coverage and security, and issues a VERDICT. Never reads the implementer's notes. Use after implementation and after each fix round.",
+    "tools": "Read, Grep, Glob, Bash",
+    "model": "opus",
+    "maxTurns": "60",
+    "guard_mode": "docs-only",
+    "reviewer_inputs_guard": true
+  },
+  "estimator": {
+    "description": "Estimates real effort and the worst case for a ticket from the code it touches and past features in the repo. Adds no scope; unknowns become questions with their cost. Use any time after ticket.md exists; rerun after grill or handoff.",
+    "tools": "Read, Grep, Glob, Write, Bash(git *), Bash(ls *), Bash(find *), Bash(wc *)",
+    "model": "opus",
+    "maxTurns": "40",
+    "guard_mode": "docs-only",
+    "reviewer_inputs_guard": false
+  }
+}

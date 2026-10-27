@@ -1,0 +1,61 @@
+{
+  "retro": {
+    "description": "\"After a feature ships, propose edits to rules, agents, and CLAUDE.md from what went wrong in its review and QA. Usage: /retro <slug>\"",
+    "disable-model-invocation": "true",
+    "arguments": "[slug]"
+  },
+  "feature": {
+    "description": "\"Run the whole pipeline for one feature, resuming from whatever stage state.json says. Stops at every human gate. Add --lite for small changes (skips grill, PRD, and data model; keeps tests, review, and the merge guard). Usage: /feature <slug> [--lite] [idea]\"",
+    "disable-model-invocation": "true",
+    "arguments": "[slug, rest]"
+  },
+  "codebase-map": {
+    "description": "Regenerate docs/pipeline/CODEBASE.md, a map of the real repository (layers, entry points, conventions, test layout, commands) built from files on disk. Agents read it at the start of every run. Run after adopting the pipeline and whenever structure changes.",
+    "allowed-tools": "Read, Grep, Glob, Bash(git *), Bash(ls *), Bash(find *), Bash(wc *), Bash(cat *), Write"
+  },
+  "review": {
+    "description": "\"Independent code review loop. code-reviewer reviews the branch; on CHANGES_REQUESTED the implementer fixes blockers/majors and the review reruns, up to max_review_rounds. High blast-radius features get a second, separate review pass. Usage: /review <slug>\"",
+    "disable-model-invocation": "true",
+    "arguments": "[slug]"
+  },
+  "grill": {
+    "description": "\"Interview the user about an idea until requirements, scope, and terminology are pinned down, then record decisions. Run before /prd. Usage: /grill <slug> <one-line idea>\"",
+    "disable-model-invocation": "true",
+    "arguments": "[slug, idea]"
+  },
+  "start": {
+    "description": "\"Role-aware entry point. Reads the operator's role from docs/pipeline/pipeline.local.json, lists features waiting on that role, and offers the next action. Usage: /start [slug]\"",
+    "disable-model-invocation": "true",
+    "arguments": "[slug]"
+  },
+  "qa": {
+    "description": "\"Acceptance testing per PRD requirement on an approved branch, then open the PR for human merge. Usage: /qa <slug>\"",
+    "disable-model-invocation": "true",
+    "arguments": "[slug]"
+  },
+  "prd": {
+    "description": "\"Write the PRD for a feature from the grill decisions (or a raw idea) with numbered testable requirements. Usage: /prd <slug> [idea]\"",
+    "disable-model-invocation": "true",
+    "arguments": "[slug, idea]"
+  },
+  "roadmap": {
+    "description": "\"For work too big for one feature. Splits an initiative into feature slugs with dependencies and writes docs/roadmaps/<name>.md; each slug then runs through /feature on its own. Usage: /roadmap <name> <description>\"",
+    "disable-model-invocation": "true",
+    "arguments": "[name, description]"
+  },
+  "implement": {
+    "description": "\"Run the TDD loop over tasks.md, one task at a time, test-writer then implementer, until every task is checked off. Usage: /implement <slug> [task-id]\"",
+    "disable-model-invocation": "true",
+    "arguments": "[slug, task]"
+  },
+  "handoff": {
+    "description": "\"Engineering handoff. Reviews the PRD against the codebase, then produces spec, data model (if data changes), and a tracer-bullet task list. Usage: /handoff <slug>\"",
+    "disable-model-invocation": "true",
+    "arguments": "[slug]"
+  },
+  "estimate": {
+    "description": "\"Expected effort and worst case (named risks, triggers, cost) for a ticket, calibrated on past features in this repo, compared with the ticket's own points. Optional, any time after ticket.md exists. Usage: /estimate <slug>\"",
+    "disable-model-invocation": "true",
+    "arguments": "[slug]"
+  }
+}

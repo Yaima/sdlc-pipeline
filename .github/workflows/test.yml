@@ -1,0 +1,11 @@
+name: test
+on:
+  push:
+  pull_request:
+jobs:
+  self-test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: sudo apt-get install -y jq
+      - run: tests/run.sh

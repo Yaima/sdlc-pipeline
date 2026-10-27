@@ -1,0 +1,43 @@
+name: Bug
+description: Something the pipeline did wrong
+body:
+  - type: dropdown
+    id: tool
+    attributes:
+      label: Tool
+      options: [Claude Code, Codex CLI, Copilot CLI or VS Code, Copilot cloud agent, Gemini CLI, Other]
+    validations:
+      required: true
+  - type: input
+    id: version
+    attributes:
+      label: Pipeline version
+      description: Contents of docs/pipeline/VERSION in the target repo
+    validations:
+      required: true
+  - type: dropdown
+    id: stage
+    attributes:
+      label: Stage
+      options: [install, start, codebase-map, grill, prd, handoff, implement, review, qa, retro, estimate, feature, enforcement script or hook]
+    validations:
+      required: true
+  - type: textarea
+    id: what
+    attributes:
+      label: What happened
+      description: What you ran, what the agent or script did, and what you expected instead
+    validations:
+      required: true
+  - type: textarea
+    id: state
+    attributes:
+      label: state.json
+      description: Paste docs/features/<slug>/state.json if a feature was involved
+      render: json
+  - type: textarea
+    id: output
+    attributes:
+      label: Hook or script output
+      description: The denial reason, the check-evidence or check-feature message, or the agent's last report
+      render: text

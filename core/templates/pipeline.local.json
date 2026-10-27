@@ -1,0 +1,5 @@
+{
+  "$comment": "Copy to docs/pipeline/pipeline.local.json (gitignored). role: solo | product | engineer | qa | reviewer, or a list.",
+  "name": "<your name>",
+  "role": "solo"
+}

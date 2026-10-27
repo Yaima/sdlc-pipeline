@@ -1,0 +1,15 @@
+# Copy to .github/workflows/sdlc-check.yml. The PR body must contain a line "Feature: <slug>".
+name: sdlc-check
+on: { pull_request: {} }
+jobs:
+  sdlc:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: sudo apt-get install -y jq
+      - name: check feature
+        env: { BODY: "${{ github.event.pull_request.body }}" }
+        run: |
+          slug=$(printf '%s' "$BODY" | grep -oE '^Feature: *[a-z0-9-]+' | head -1 | awk '{print $2}')
+          [ -n "$slug" ] || { echo "PR body needs a line: Feature: <slug>"; exit 1; }
+          bash docs/pipeline/enforcement/check-feature.sh "$slug"
