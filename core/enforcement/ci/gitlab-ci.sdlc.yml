@@ -1,5 +1,7 @@
 # Include from .gitlab-ci.yml:  include: { local: docs/pipeline/enforcement/ci/gitlab-ci.sdlc.yml }
 # The MR description (pr-body.md) must contain a line "Feature: <slug>".
+# This job checks the reports and binds them to the tree. To also run test_cmd/lint_cmd/typecheck_cmd here
+# (the authoritative check), add --run and use an image that has the repo's toolchain instead of alpine.
 sdlc-check:
   stage: test
   image: alpine:3.20

@@ -19,12 +19,12 @@ Start from the diff. Narrow first with Grep and Glob; read exact evidence with R
 ## Procedure (do all of it, in order)
 
 1. **Verify inputs.** If the diff is empty, tests cannot run, `state.json.spec_sha` differs from `git hash-object docs/features/<slug>/spec.md`, or spec contradicts PRD in a way that makes the diff unjudgeable, write `VERDICT: BLOCKED` with the reason and stop.
-2. **Run the checks yourself.** `test_cmd`, `lint_cmd`, `typecheck_cmd`, `coverage_cmd` when set. Record commands and exit codes. A failing suite is a blocker regardless of anything else.
+2. **Run the checks yourself.** `test_cmd`, `lint_cmd`, `typecheck_cmd`, `security_cmd`, `coverage_cmd` when set. Record commands and exit codes. A failing suite is a blocker regardless of anything else. A `security_cmd` finding is a blocker unless the human has recorded a waiver for that exact finding in `decisions.md`; cite the scanner output line in the finding.
 3. **Read the diff** per the rule above.
 4. **Requirement coverage table.** One row per R-id: spec section, implementing file:line, test file::name, status (met / partial / missing). A test that exists but does not exercise the acceptance criterion counts as missing.
 5. **Test quality.** For each new or changed test: does it fail if the implementation is reverted? If you cannot tell by reading, revert the relevant hunk in a scratch worktree (`git worktree add`) and run it. Tests that pass against reverted code are a major. A diff that rewrites many existing assertions is a blocker until each rewrite is justified by the spec.
 6. **Correctness.** Trace the data flow from `spec.md` through the code. Edge cases: empty, nil, boundary, concurrency, retries, partial failure, ordering, timezone, unicode, large input.
-7. **Security.** Apply the checklist in `review-standards.md` to every boundary the diff touches. New endpoints, actions, or commands without an authorization check are blockers.
+7. **Security.** Apply the checklist in `review-standards.md` to every boundary the diff touches. New endpoints, actions, or commands without an authorization check are blockers. The checklist is your reading; `security_cmd` (step 2) is the scanner. When `security_cmd` is empty, say so under "What I did not check" so the gap is visible.
 8. **Spec and pattern conformance.** Interfaces match `spec.md`. Code follows the repo's existing pattern for that layer (cite the example). Deviations are majors unless the spec explains them.
 9. **Reuse.** A new file or type that re-implements something the repo already has (a second Kafka consumer beside an existing listener, a second producer, a copied loop) is a major; cite the existing implementation and the lines that duplicate it. The fix is to generalize the existing one.
 10. **Test shape.** New or changed test files follow the shape of the existing tests in the same package: same framework, same fixture and mock packages (a fake defined in a `_test.go` when a test-side mock package exists and could hold it without an import cycle is a major; when the mock package is production-imported or would cycle, the `_test.go` fake is correct), table-driven where the repo is, size comparable to neighbors. Test lines added above 2:1 against source lines added, or a criterion asserted in two files, is a minor with the duplicate cases named. QA scratch test files in the diff are a major.
@@ -40,6 +40,7 @@ Append to `review-log.md`:
 ```
 ## Review round N (date, HEAD <sha>, working tree hash <git stash create or 'clean'>)
 VERDICT: APPROVE | CHANGES_REQUESTED | BLOCKED
+Tree: <run docs/pipeline/enforcement/tree-hash.sh and paste the hash; it binds this verdict to the exact tree you reviewed>
 Stopping criterion for next round: <which severities would justify another round>
 ### Checks run
 | command | exit code |

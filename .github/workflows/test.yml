@@ -2,10 +2,21 @@ name: test
 on:
   push:
   pull_request:
+permissions:
+  contents: read
 jobs:
   self-test:
-    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest]
+    runs-on: ${{ matrix.os }}
     steps:
-      - uses: actions/checkout@v4
-      - run: sudo apt-get install -y jq
-      - run: tests/run.sh
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+      - name: install jq and shellcheck
+        run: |
+          if [ "$RUNNER_OS" = "Linux" ]; then sudo apt-get update -q && sudo apt-get install -y jq shellcheck; else brew install jq shellcheck; fi
+      - name: shellcheck
+        run: shellcheck -S warning install.sh tests/run.sh core/enforcement/*.sh core/enforcement/pre-commit adapters/claude-code/hooks/*.sh
+      - name: self-test
+        run: tests/run.sh

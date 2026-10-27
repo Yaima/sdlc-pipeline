@@ -93,7 +93,7 @@ python3 - "$DST/.claude/settings.json" "$DST/docs/pipeline/pipeline.json" <<'EOF
 import json,sys
 sp,pp=sys.argv[1],sys.argv[2]; s=json.load(open(sp)); c=json.load(open(pp))
 allow=["Bash(git status:*)","Bash(git diff:*)","Bash(git log:*)","Bash(git show:*)","Bash(git branch:*)","Bash(git ls-files:*)","Bash(git hash-object:*)","Bash(git stash create)","Bash(git worktree:*)"]
-for k in ("test_cmd","test_file_cmd","lint_cmd","typecheck_cmd","format_cmd","coverage_cmd"):
+for k in ("test_cmd","test_file_cmd","lint_cmd","typecheck_cmd","security_cmd","format_cmd","coverage_cmd"):
     v=(c.get(k) or "").strip()
     if v: allow += [f"Bash({v})", f"Bash({v}:*)"]
 for ext,cfg in (c.get("languages") or {}).items():
@@ -118,7 +118,7 @@ echo "installed sdlc-pipeline $(cat "$HERE/VERSION") into $DST${GUARDS:+ }$([ "$
 if [ "$GUARDS" -eq 1 ]; then cat <<MSG
 Guards installed: .claude/hooks (git guard, path guard, evidence gate), .claude/settings.json, docs/pipeline/enforcement, docs/pipeline/pipeline.json.
 Then:
-  1. docs/pipeline/pipeline.json: test_cmd, lint_cmd, test_globs, protected_config_globs, protected_branches, base_branch. Re-run install after changes (it regenerates the permission allowlist).
+  1. docs/pipeline/pipeline.json: test_cmd, lint_cmd, security_cmd, test_globs, protected_config_globs, protected_branches, base_branch. Re-run install after changes (it regenerates the permission allowlist).
   2. ln -sf ../../docs/pipeline/enforcement/pre-commit .git/hooks/pre-commit; SDLC_HUMAN=1 when you commit.
   3. CI: docs/pipeline/enforcement/ci/ (optional without the process; check-evidence.sh works on any report file).
   What each guard does: docs/pipeline/ENFORCEMENT.md. Add the full pipeline later with ./install.sh $DST (repo-owned files are kept).
@@ -128,7 +128,7 @@ elif [ ${#new_files[@]} -gt 0 ]; then cat <<MSG
 New repo-owned files; edit by hand:
 $(printf '  - %s\n' "${new_files[@]}")
 Then:
-  1. docs/pipeline/pipeline.json: test_cmd, lint_cmd, typecheck_cmd, coverage_cmd, base_branch, pr_tool (match the Makefile/CI).
+  1. docs/pipeline/pipeline.json: test_cmd, lint_cmd, typecheck_cmd, security_cmd, coverage_cmd, base_branch, pr_tool (match the Makefile/CI).
   2. docs/pipeline/pipeline.local.json: your name and role.
   3. AGENTS.md "Repo facts": rewrite from the repo. Agents treat every line as true.
   4. ln -sf ../../docs/pipeline/enforcement/pre-commit .git/hooks/pre-commit

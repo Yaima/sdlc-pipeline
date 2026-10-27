@@ -6,7 +6,7 @@ set -u
 ROOT=$(git rev-parse --show-toplevel)
 CFG="$ROOT/docs/pipeline/pipeline.json"; [ -f "$CFG" ] || CFG="$ROOT/.claude/pipeline.json"
 [ -f "$CFG" ] || exit 0
-command -v jq >/dev/null || { echo "sdlc pre-commit: jq missing, skipping checks" >&2; exit 0; }
+command -v jq >/dev/null || { echo "sdlc pre-commit: DENIED. jq is missing and the checks cannot run. Install jq, or SDLC_SKIP_PRECOMMIT=1 for this one commit." >&2; [ "${SDLC_SKIP_PRECOMMIT:-}" = "1" ] && exit 0; exit 1; }
 MODE=$(jq -r '.commit_mode // "human"' "$CFG")
 BRANCH=$(git rev-parse --abbrev-ref HEAD)
 deny() { echo "sdlc pre-commit: DENIED. $1" >&2; exit 1; }
@@ -21,6 +21,15 @@ done < <(jq -r '.protected_branches[]? // empty' "$CFG")
 # 2. human-only commits
 if [ "$MODE" = "human" ] && [ "${SDLC_HUMAN:-}" != "1" ]; then
   deny "commit_mode=human: only a person commits. If that is you: SDLC_HUMAN=1 git commit ... (do not export it globally where agents inherit it)."
+fi
+
+# 2b. staged secrets, when a scanner is installed (gitleaks). Skipped with a notice otherwise; SDLC_SKIP_SECRETS=1 to bypass once.
+if [ "${SDLC_SKIP_SECRETS:-}" != "1" ]; then
+  if command -v gitleaks >/dev/null 2>&1; then
+    gitleaks protect --staged --no-banner --redact >/dev/null 2>&1 || deny "gitleaks found a secret in the staged changes. Remove it (and rotate it if it was ever pushed). SDLC_SKIP_SECRETS=1 bypasses this once."
+  else
+    echo "sdlc pre-commit: gitleaks not on PATH; staged changes were not scanned for secrets" >&2
+  fi
 fi
 
 # 3. tests and config frozen while a feature is being implemented

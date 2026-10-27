@@ -8,6 +8,7 @@
   "blast_radius": null,
   "spec_sha": null,
   "data_model_sha": null,
+  "manifest": {},
   "base_branch": "main",
   "feature_branch": "feat/<slug>",
   "ticket": null,

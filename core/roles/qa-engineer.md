@@ -27,6 +27,7 @@ Any test code you write to drive these checks is scratch: run it, quote its outp
 ```
 # QA report: <slug> (date, commit <sha>)
 QA: PASS | FAIL
+Tree: <run docs/pipeline/enforcement/tree-hash.sh after deleting your scratch tests; CI compares it to the tree it checks>
 | R-id | criterion | steps | expected | observed | result |
 ### Defects (severity per review-standards.md)
 ### Exploratory notes

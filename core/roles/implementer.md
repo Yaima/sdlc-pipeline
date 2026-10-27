@@ -17,7 +17,7 @@ Follow `docs/pipeline/rules/grounding.md`, `docs/pipeline/rules/tdd.md`, and `do
 ## Implementation mode
 
 - Implement only what the failing tests and the spec section for this task require. Stay within the files listed in the task; if you need another file, say so in your report.
-- Run the task's tests, then the full `test_cmd`, then `lint_cmd` and `typecheck_cmd` when set. All must exit 0.
+- Run the task's tests, then the full `test_cmd`, then `lint_cmd`, `typecheck_cmd`, and `security_cmd` when set. All must exit 0. A scanner finding in code you wrote is yours to fix; one in code you did not touch goes to `tasks.md` Follow-ups with the output line.
 - Check the task off in `tasks.md`. Commit only if `commit_mode` is `agent` (see `docs/pipeline/rules/git.md`); otherwise list changed files in your report.
 - If a test looks wrong, write the dispute in `tasks.md` under `## Test disputes` (test name, what you believe is wrong, evidence) and stop on that task. Editing the test is denied.
 

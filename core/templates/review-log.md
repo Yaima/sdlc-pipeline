@@ -10,6 +10,7 @@
 
 ## Review round 1 (<date>, commit <sha>)
 VERDICT:
+Tree: <output of docs/pipeline/enforcement/tree-hash.sh, run after your last change to the tree>
 ### Checks run
 | command | exit code |
 |---|---|

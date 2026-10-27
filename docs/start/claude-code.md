@@ -10,7 +10,7 @@
 
 ## What is enforced
 
-Everything in `docs/pipeline/ENFORCEMENT.md`'s Claude column: agents cannot commit or push (guard-git denies with `permissionDecision: deny`), the implementer cannot edit tests or config, the test-writer edits tests only, doc roles edit `docs/` only, the reviewer cannot read `fix-notes.md`, and a role cannot finish without an Evidence section (SubagentStop blocks twice, then marks the report unverified). Project subagent hooks run only after you accept the workspace trust dialog; a `claude -p` session does not count. https://code.claude.com/docs/en/hooks#hooks-in-skills-and-agents
+These are guardrails (local hooks; see the control classes in `docs/pipeline/ENFORCEMENT.md`); the authoritative check is CI. Everything in `docs/pipeline/ENFORCEMENT.md`'s Claude column: agents cannot commit or push (guard-git denies with `permissionDecision: deny`), the implementer cannot edit tests or config, the test-writer edits tests only, doc roles edit `docs/` only, the reviewer cannot read `fix-notes.md`, and a role cannot finish without an Evidence section (SubagentStop blocks twice, then marks the report unverified). Project subagent hooks run only after you accept the workspace trust dialog; a `claude -p` session does not count. https://code.claude.com/docs/en/hooks#hooks-in-skills-and-agents
 
 ## Setup
 

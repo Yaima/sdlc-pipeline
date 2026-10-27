@@ -40,12 +40,20 @@ case "$AGENT" in
     if [ -n "$TEST_CMD" ]; then
       printf '%s' "$MSG" | grep -Fq "$TEST_CMD" || missing+=("the test command from docs/pipeline/pipeline.json ($TEST_CMD) as actually run, verbatim")
     fi
+    SEC_CMD=""; [ -f "$CFG" ] && SEC_CMD=$(jq -r '.security_cmd // ""' "$CFG")
+    if [ -n "$SEC_CMD" ]; then
+      case "$AGENT" in implementer|code-reviewer)
+        printf '%s' "$MSG" | grep -Fq "$SEC_CMD" || missing+=("the security command from docs/pipeline/pipeline.json ($SEC_CMD) as actually run, verbatim, with its exit code") ;;
+      esac
+    fi
     printf '%s' "$MSG" | grep -Eiq 'exit (code|status)[: ]+[0-9]+|rc=[0-9]+' || missing+=("the exit code of each command run (write 'exit code N')")
     ;;
 esac
 case "$AGENT" in
-  code-reviewer) printf '%s' "$MSG" | grep -Eq '^VERDICT: (APPROVE|CHANGES_REQUESTED|BLOCKED)' || missing+=("a first line 'VERDICT: APPROVE|CHANGES_REQUESTED|BLOCKED'") ;;
-  qa-engineer)   printf '%s' "$MSG" | grep -Eq '^QA: (PASS|FAIL|BLOCKED|NOT READY)' || missing+=("a first line 'QA: PASS|FAIL|BLOCKED|NOT READY'") ;;
+  code-reviewer) printf '%s' "$MSG" | grep -Eq '^VERDICT: (APPROVE|CHANGES_REQUESTED|BLOCKED)' || missing+=("a first line 'VERDICT: APPROVE|CHANGES_REQUESTED|BLOCKED'")
+                 printf '%s' "$MSG" | grep -Eq '^Tree: [0-9a-f]{40}' || missing+=("a 'Tree: <hash>' line (run docs/pipeline/enforcement/tree-hash.sh)") ;;
+  qa-engineer)   printf '%s' "$MSG" | grep -Eq '^QA: (PASS|FAIL|BLOCKED|NOT READY)' || missing+=("a first line 'QA: PASS|FAIL|BLOCKED|NOT READY'")
+                 printf '%s' "$MSG" | grep -Eq '^Tree: [0-9a-f]{40}' || missing+=("a 'Tree: <hash>' line (run docs/pipeline/enforcement/tree-hash.sh)") ;;
   test-writer)   printf '%s' "$MSG" | grep -Eiq '(^|[^a-z])fail' || missing+=("the failure output of the new tests (they must fail before implementation)") ;;
 esac
 

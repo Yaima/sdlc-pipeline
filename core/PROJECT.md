@@ -10,7 +10,7 @@ Read `docs/pipeline/PROCESS.md` before any pipeline work.
 - DB: <schema, main tables, where migrations live and how they are applied>
 - Base branch: <develop|main>. Hosted on <GitLab|GitHub>; PRs/MRs via <glab|gh>, merged by humans
 - Tests: <exact command; what must be running locally (DB port, compose file, env vars)>
-- Lint: <exact command and version>; <typecheck command>
+- Lint: <exact command and version>; <typecheck command>; <security scanner command, or "none">
 - Private deps / credentials: <if any>
 - Ticket and branch: set per feature in `docs/features/<slug>/state.json`
 

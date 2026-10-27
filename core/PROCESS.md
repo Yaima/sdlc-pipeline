@@ -76,7 +76,7 @@ The requirements-analyst sets `state.json.blast_radius` (low / medium / high). W
 
 ## Spec pinning and task size
 
-`/handoff` records `spec_sha` and `data_model_sha`. Implementer and reviewer stop with BLOCKED if the spec changed since. Tasks are capped by `max_task_loc` (default 300); the architect splits larger ones.
+`/handoff` records `spec_sha`, `data_model_sha`, and `state.json.manifest` (hashes of ticket, prd, spec, data-model, and pipeline.json). Implementer and reviewer stop with BLOCKED if the spec changed since; CI (`check-feature.sh`) fails if any manifest entry changed after handoff, if the `Tree:` hash recorded by review or QA differs from the tree under check, and, with `--run`, if the repo's own commands fail on that tree. Tasks are capped by `max_task_loc` (default 300); the architect splits larger ones.
 
 ## Operator roles
 

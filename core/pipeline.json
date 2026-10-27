@@ -1,9 +1,10 @@
 {
-  "$comment": "Repo-specific commands and loop limits. Agents and hooks read this file. Set the commands for this repo; leave \"\" if the repo has none. Per-person settings (role) go in docs/pipeline/pipeline.local.json, which is gitignored. test_globs lists common layouts for Go, Python, JavaScript/TypeScript, and Java; trim it to this repo's.",
+  "$comment": "Repo-specific commands and loop limits. Agents and hooks read this file. Set the commands for this repo; leave \"\" if the repo has none. Per-person settings (role) go in docs/pipeline/pipeline.local.json, which is gitignored. test_globs lists common layouts for Go, Python, JavaScript/TypeScript, and Java; trim it to this repo's. security_cmd is the repo's own scanner (examples: gosec ./... or govulncheck ./...; bandit -r . && pip-audit; npm audit --audit-level=high; semgrep --config auto; gitleaks detect). It runs like lint_cmd: by the reviewer, in the evidence gate, and in CI with check-feature.sh --run.",
   "test_cmd": "",
   "test_file_cmd": "",
   "lint_cmd": "",
   "typecheck_cmd": "",
+  "security_cmd": "",
   "format_cmd": "",
   "coverage_cmd": "",
   "test_globs": [

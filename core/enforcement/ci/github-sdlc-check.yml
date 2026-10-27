@@ -1,4 +1,6 @@
 # Copy to .github/workflows/sdlc-check.yml. The PR body must contain a line "Feature: <slug>".
+# This job checks the reports and binds them to the tree. To also run test_cmd/lint_cmd/typecheck_cmd here
+# (the authoritative check), set up the repo's toolchain in this job and add --run to the last line.
 name: sdlc-check
 on: { pull_request: {} }
 jobs:

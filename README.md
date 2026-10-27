@@ -15,6 +15,14 @@ idea ─► grill ─► prd ─► handoff ─► implement ─► review ─�
 
 That is the `full` tier. `standard` starts at `prd`; `lite` starts at a one-paragraph spec. All three share implement, review, and qa.
 
+## Security checks
+
+Two layers, and the pipeline names which is which. The reviewer applies a checklist to every boundary the diff touches (input validation, authorization on new endpoints or actions, secrets in code, unsafe deserialization, injection, path traversal, unbounded resource use); a security flaw is a blocker, and auth, permissions, payments, migrations, and public API changes get a second review pass. That layer is a model reading code. The deterministic layer is `security_cmd` in `pipeline.json`, run by the implementer and the reviewer, required by the evidence gate, and executed by CI with `check-feature.sh --run`; and the git `pre-commit`, which runs `gitleaks protect --staged` when `gitleaks` is installed and says so when it is not. The pipeline ships no scanner of its own; the repo chooses one.
+
+## Trust boundary
+
+Three classes of control, named as such throughout the docs. **Instructions** are what the role prompts say; the model usually follows them. **Guardrails** are local mechanisms: the hooks that deny `git commit`, test-file edits, and reports without evidence, and the git `pre-commit`. They stop the common paths, and a process with a shell on the same machine can get around them, so they count as accident prevention and intent marking. **Authoritative controls** sit outside the agent's reach: branch protection on the server, and CI running `check-feature.sh`, which checks that the reports exist, binds them to the exact tree under review (`Tree:` hashes and a handoff manifest), and with `--run` executes the repo's own test, lint, and typecheck commands. The agent's reports are testimony; CI running the commands is the check. `core/ENFORCEMENT.md` classifies every control.
+
 ## How it is organized
 
 ```
@@ -26,7 +34,7 @@ core/            the process, tool-neutral. Edit this and nothing else.
   stages/        one playbook per stage: start, codebase-map, grill, prd, handoff,
                  implement, review, qa, feature, roadmap, retro, estimate (optional)
   templates/     prd, spec, data-model, tasks, review-log, qa-report, pr-body, state.json
-  enforcement/   git pre-commit, check-evidence.sh, check-feature.sh, CI snippets
+  enforcement/   git pre-commit, tree-hash.sh, check-evidence.sh, check-feature.sh, CI snippets
 adapters/claude-code/   hook scripts and agent metadata (tools, model, turn caps, guard modes)
 docs/start/      per-tool start guides with sources (claude-code, codex, copilot, gemini, other-tools)
 docs/research.md the evidence behind the design choices (reviewer bias, test tampering, loop convergence), with sources
@@ -72,11 +80,11 @@ To try it without committing pipeline files to a shared repo, list the installed
 
 Then, in the target repo:
 
-1. `docs/pipeline/pipeline.json`: `test_cmd`, `lint_cmd`, `typecheck_cmd`, `coverage_cmd`, `base_branch`, `pr_tool`. Match the Makefile and CI exactly (timeouts, flags). Leave `""` when the repo has none. `install.sh` turns these commands into a `permissions.allow` list in `.claude/settings.json`, so agents run them without a prompt; re-run `install.sh` after changing them. Your own extra permissions go in `.claude/settings.local.json` (gitignored), which install never touches.
+1. `docs/pipeline/pipeline.json`: `test_cmd`, `lint_cmd`, `typecheck_cmd`, `security_cmd`, `coverage_cmd`, `base_branch`, `pr_tool`. Match the Makefile and CI exactly (timeouts, flags). Leave `""` when the repo has none. `security_cmd` is the repo's own scanner (for example `gosec ./...`, `bandit -r . && pip-audit`, `npm audit --audit-level=high`, `semgrep --config auto`, `gitleaks detect`); the implementer and reviewer run it, the evidence gate requires it, and CI runs it with `--run`. Without one, security review is the reviewer's checklist only, and the review log says so. `install.sh` turns these commands into a `permissions.allow` list in `.claude/settings.json`, so agents run them without a prompt; re-run `install.sh` after changing them. Your own extra permissions go in `.claude/settings.local.json` (gitignored), which install never touches.
 2. `docs/pipeline/pipeline.local.json`: your name and role (`solo`, `product`, `engineer`, `qa`, `reviewer`). Gitignored; each teammate has their own.
 3. `AGENTS.md`: rewrite **Repo facts** from the repo itself (the pipeline block below it is generated; leave it). Every agent reads it first and treats every line as true. A copied or guessed line (wrong test framework, a function that does not exist) costs a full handoff round.
 4. `ln -sf ../../docs/pipeline/enforcement/pre-commit .git/hooks/pre-commit`, and `export SDLC_HUMAN=1` only in the shell where you commit (not globally, or agents inherit it).
-5. Add the CI check: `docs/pipeline/enforcement/ci/gitlab-ci.sdlc.yml` (include) or `github-sdlc-check.yml` (copy to `.github/workflows/`). It fails a merge request whose feature lacks `VERDICT: APPROVE`, `QA: PASS`, a pinned spec, or evidence.
+5. Add the CI check: `docs/pipeline/enforcement/ci/gitlab-ci.sdlc.yml` (include) or `github-sdlc-check.yml` (copy to `.github/workflows/`). It fails a merge request whose feature lacks `VERDICT: APPROVE`, `QA: PASS`, a pinned spec and manifest, evidence, or whose reviewed `Tree:` hash differs from the tree being merged. Add `--run` in a job that has the repo's toolchain so CI also executes `test_cmd`, `lint_cmd`, and `typecheck_cmd`; that is the authoritative check. Turn on branch protection with the check required.
 6. Open the repo in your tool and accept its workspace-trust prompt (hooks run only in a trusted workspace). Run `/codebase-map`, read `docs/pipeline/CODEBASE.md`, and correct it; agents read it before every run. Create the ticket branch from `base_branch`. Run `/start`.
 
 Stages are slash commands in Claude Code, Codex, Copilot, and Gemini (`/feature`, `/review`, ...). In a tool without slash commands, say "run stage feature for <slug>" and paste `docs/pipeline/stages/feature.md`; `docs/start/other-tools.md` covers that case.

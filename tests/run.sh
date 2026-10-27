@@ -100,6 +100,10 @@ t "pipeline.local.json survived" bash -c "[ \"\$(jq -r .name '$R/docs/pipeline/p
 t ".gitignore lines not duplicated" bash -c "[ \"\$(grep -cxF 'docs/pipeline/pipeline.local.json' '$R/.gitignore')\" = 1 ]"
 t "settings.json allows test_cmd" jq -e '.permissions.allow | index("Bash(make test:*)")' "$R/.claude/settings.json"
 t "settings.json allows read-only git" jq -e '.permissions.allow | index("Bash(git diff:*)")' "$R/.claude/settings.json"
+jq '.security_cmd="gosec ./..."' "$R/docs/pipeline/pipeline.json" > "$TMP/pj" && mv "$TMP/pj" "$R/docs/pipeline/pipeline.json"
+t "third install exits 0" "$HERE/install.sh" "$R"
+t "settings.json allows security_cmd" jq -e '.permissions.allow | index("Bash(gosec ./...:*)")' "$R/.claude/settings.json"
+jq '.security_cmd=""' "$R/docs/pipeline/pipeline.json" > "$TMP/pj" && mv "$TMP/pj" "$R/docs/pipeline/pipeline.json"
 tf "settings.json does not allow git commit" jq -e '.permissions.allow | map(select(startswith("Bash(git commit"))) | length > 0' "$R/.claude/settings.json"
 t "settings.json keeps the hooks" jq -e '.hooks.PreToolUse' "$R/.claude/settings.json"
 
@@ -178,6 +182,58 @@ t  "rm -rf outside scratch asks, not denies" bash -c "printf '%s' '{\"tool_input
 t  "rm -rf node_modules passes silently" bash -c "[ -z \"\$(printf '%s' '{\"tool_input\":{\"command\":\"rm -rf node_modules\"}}' | '$H/guard-git.sh')\" ]"
 jq '.commit_mode="human"' "$R/docs/pipeline/pipeline.json" > "$TMP/pj" && mv "$TMP/pj" "$R/docs/pipeline/pipeline.json"
 
+group "guard-git.sh (adversarial: ways around the rules)"
+jq '.commit_mode="human"' "$R/docs/pipeline/pipeline.json" > "$TMP/pj" && mv "$TMP/pj" "$R/docs/pipeline/pipeline.json"
+tf "inline alias to commit" gg "git -c alias.ci=commit ci -m x"
+tf "inline alias with space" gg "git -c  alias.p=push p origin feature/x"
+tf "core.hooksPath override" gg "git -c core.hooksPath=/dev/null status"
+tf "--no-verify" gg "git commit --no-verify -m x"
+tf "git config alias" gg "git config alias.ci commit"
+tf "git config hooksPath" gg "git config core.hooksPath .nohooks"
+tf "command builtin prefix" gg "command git push origin feature/x"
+tf "sh -c wrapper" gg "sh -c 'git commit -m x'"
+tf "env prefix" gg "GIT_AUTHOR_NAME=x git commit -m x"
+tf "chained after a harmless command" gg "git status && git push origin feature/x"
+tf "piped" gg "echo y | git commit -F -"
+tf "gh pr create in a subshell" gg "(cd . && gh pr create --fill)"
+jq '.commit_mode="agent"' "$R/docs/pipeline/pipeline.json" > "$TMP/pj" && mv "$TMP/pj" "$R/docs/pipeline/pipeline.json"
+tf "push HEAD:main refspec" gg "git push origin HEAD:main"
+tf "push +refs/heads/main" gg "git push origin +refs/heads/main"
+tf "push refs/heads/develop" gg "git push origin feature/x:refs/heads/develop"
+tf "push --force-with-lease" gg "git push --force-with-lease origin feature/x"
+tf "push -f short flag" gg "git push -f origin feature/x"
+tf "push release/* branch" gg "git push origin HEAD:release/2.0"
+t  "push to a feature branch still allowed" gg "git push origin feature/x:feature/x"
+t  "push to a branch that merely contains 'main'" gg "git push origin feature/maintenance"
+jq '.commit_mode="human"' "$R/docs/pipeline/pipeline.json" > "$TMP/pj" && mv "$TMP/pj" "$R/docs/pipeline/pipeline.json"
+tf "rm a test file" gg "rm pkg/x_test.go"
+tf "rm -f a python test" gg "rm -f tests/test_x.py"
+tf "mv a test file away" gg "mv pkg/x_test.go pkg/x.go.bak"
+tf "truncate a test" gg "truncate -s 0 pkg/x_test.go"
+tf "sed -i on a test" gg "sed -i 's/assert/skip/' tests/test_x.py"
+tf "sed -i.bak on a test" gg "sed -i.bak 's/a/b/' pkg/x_test.go"
+tf "redirect into a test" gg "echo 'package x' > pkg/x_test.go"
+tf "append into a test" gg "echo x >> pkg/x_test.go"
+tf "redirect without spaces" gg "echo x >pkg/x_test.go"
+tf "tee into a test" gg "echo x | tee pkg/x_test.go"
+tf "cp over a test" gg "cp /tmp/fake.go pkg/x_test.go"
+tf "git rm a test" gg "git rm pkg/x_test.go"
+tf "git checkout -- a test" gg "git checkout -- pkg/x_test.go"
+tf "git restore a test" gg "git restore pkg/x_test.go"
+tf "rm the Makefile" gg "rm Makefile"
+tf "redirect into CI config" gg "cat /dev/null > .github/workflows/ci.yml"
+tf "sed -i on pipeline.json" gg "sed -i 's/human/agent/' docs/pipeline/pipeline.json"
+tf "quoted test path" gg "rm 'pkg/x_test.go'"
+t  "reading a test is allowed" gg "cat pkg/x_test.go"
+t  "grep in tests is allowed" gg "grep -n assert tests/test_x.py"
+t  "sed -n (read) on a test is allowed" gg "sed -n 1,20p pkg/x_test.go"
+t  "redirect output elsewhere while reading a test" gg "grep foo pkg/x_test.go > /tmp/out.txt"
+t  "rm a source file is allowed" gg "rm pkg/old.go"
+role_gg() { SDLC_ROLE="$1" gg "$2"; }
+cfg_gg() { SDLC_ALLOW_CONFIG=1 gg "$1"; }
+t  "test-writer may rm a test" role_gg test-writer "rm pkg/x_test.go"
+t  "SDLC_ALLOW_CONFIG=1 may write config" cfg_gg "echo x > Makefile"
+
 group "guard-paths.sh"
 fp() { printf '{"tool_input":{"file_path":"%s"}}' "$R/$1"; }
 t  "tests-readonly denies Go test"      denies guard-paths.sh "$(fp pkg/x_test.go)" tests-readonly
@@ -201,24 +257,45 @@ t  "SDLC_ROLE=code-reviewer overrides mode" role_denies code-reviewer guard-path
 patch_json=$(jq -n --arg p $'*** Begin Patch\n*** Update File: pkg/x_test.go\n@@\n-a\n+b\n*** End Patch' '{tool_input:{input:$p}}')
 t  "Codex apply_patch paths are read"   denies guard-paths.sh "$patch_json" tests-readonly
 t  "empty input allowed"                allows guard-paths.sh '{}' tests-readonly
+t  "traversal to a test file"           denies guard-paths.sh "$(fp ../other/pkg/x_test.go)" tests-readonly
+t  "dot-slash prefix"                   denies guard-paths.sh "$(fp ./pkg/x_test.go)" tests-readonly
+t  "absolute path outside repo, docs-only" denies guard-paths.sh '{"tool_input":{"file_path":"/etc/hosts"}}' docs-only
+t  "absolute path outside repo, tests-only" denies guard-paths.sh '{"tool_input":{"file_path":"/tmp/x.go"}}' tests-only
+t  "path with spaces"                   denies guard-paths.sh "$(jq -n --arg p "$R/pkg/my test_test.go" '{tool_input:{file_path:$p}}')" tests-readonly
+t  "notebook_path key"                  denies guard-paths.sh "$(jq -n --arg p "$R/tests/test_nb.py" '{tool_input:{notebook_path:$p}}')" tests-readonly
+t  "generic path key (Gemini write_file)" denies guard-paths.sh "$(jq -n --arg p "$R/pkg/x_test.go" '{tool_input:{path:$p}}')" tests-readonly
+t  "apply_patch: Add File into tests"   denies guard-paths.sh "$(jq -n --arg p $'*** Begin Patch\n*** Add File: tests/test_new.py\n+x\n*** End Patch' '{tool_input:{input:$p}}')" tests-readonly
+t  "apply_patch: Delete File test"      denies guard-paths.sh "$(jq -n --arg p $'*** Begin Patch\n*** Delete File: pkg/x_test.go\n*** End Patch' '{tool_input:{input:$p}}')" tests-readonly
+t  "apply_patch: Move to File over a test" denies guard-paths.sh "$(jq -n --arg p $'*** Begin Patch\n*** Update File: pkg/x.go\n*** Move to File: pkg/x_test.go\n@@\n-a\n+b\n*** End Patch' '{tool_input:{input:$p}}')" tests-readonly
+t  "apply_patch: one bad file among good" denies guard-paths.sh "$(jq -n --arg p $'*** Begin Patch\n*** Update File: pkg/a.go\n@@\n-a\n+b\n*** Update File: Makefile\n@@\n-a\n+b\n*** End Patch' '{tool_input:{input:$p}}')" tests-readonly
+t  "apply_patch: all source files pass"  allows guard-paths.sh "$(jq -n --arg p $'*** Begin Patch\n*** Update File: pkg/a.go\n@@\n-a\n+b\n*** End Patch' '{tool_input:{input:$p}}')" tests-readonly
 
 group "evidence-gate.sh"
 eg() { jq -n --arg a "$1" --arg m "$2" --arg id "eg-$RANDOM$RANDOM" '{agent_type:$a,last_assistant_message:$m,agent_id:$id}' | "$H/evidence-gate.sh" 2>/dev/null; }
 blocks() { eg "$@" | grep -q '"decision": *"block"'; }
 passes() { [ -z "$(eg "$@")" ]; }
-good_rev=$'VERDICT: APPROVE\n\n## Checks run\nmake test exit code 0\n\n## Evidence\n- pkg/x.go:10'
+good_rev=$'VERDICT: APPROVE\nTree: 0123456789abcdef0123456789abcdef01234567\n\n## Checks run\nmake test exit code 0\n\n## Evidence\n- pkg/x.go:10'
 t  "reviewer with full report passes" passes code-reviewer "$good_rev"
 t  "reviewer without VERDICT blocks" blocks code-reviewer $'## Evidence\nmake test exit code 0'
+t  "reviewer without Tree blocks" blocks code-reviewer $'VERDICT: APPROVE\n## Evidence\nmake test exit code 0'
 t  "reviewer without Evidence blocks" blocks code-reviewer $'VERDICT: APPROVE\nmake test exit code 0'
 t  "reviewer without test command blocks" blocks code-reviewer $'VERDICT: APPROVE\n## Evidence\nran tests, exit code 0'
 t  "reviewer without exit code blocks" blocks code-reviewer $'VERDICT: APPROVE\n## Evidence\nmake test passed'
 t  "qa without QA line blocks" blocks qa-engineer $'## Evidence\nmake test exit code 0'
-t  "qa with QA: PASS passes" passes qa-engineer $'QA: PASS\n## Evidence\nmake test exit code 0'
+t  "qa with QA: PASS passes" passes qa-engineer $'QA: PASS\nTree: 0123456789abcdef0123456789abcdef01234567\n## Evidence\nmake test exit code 0'
+t  "qa without Tree blocks" blocks qa-engineer $'QA: PASS\n## Evidence\nmake test exit code 0'
 t  "test-writer without failure output blocks" blocks test-writer $'## Evidence\nmake test exit code 0'
 t  "test-writer with FAIL output passes" passes test-writer $'## Evidence\nmake test exit code 1\n--- FAIL: TestX'
 t  "architect needs only Evidence" passes architect $'## Evidence\n- read pkg/x.go:1'
 t  "architect without Evidence blocks" blocks architect 'spec written'
 t  "unknown agent is ignored" passes some-other-agent 'anything'
+jq '.security_cmd="gosec ./..."' "$R/docs/pipeline/pipeline.json" > "$TMP/pj" && mv "$TMP/pj" "$R/docs/pipeline/pipeline.json"
+t  "reviewer without security_cmd output blocks when configured" blocks code-reviewer "$good_rev"
+t  "reviewer with security_cmd output passes" passes code-reviewer "$good_rev"$'\ngosec ./... exit code 0'
+t  "implementer without security_cmd output blocks" blocks implementer $'## Evidence\nmake test exit code 0'
+t  "implementer with security_cmd output passes" passes implementer $'## Evidence\nmake test exit code 0\ngosec ./... exit code 0'
+t  "test-writer is not asked for security_cmd" passes test-writer $'## Evidence\nmake test exit code 1\n--- FAIL: TestX'
+jq '.security_cmd=""' "$R/docs/pipeline/pipeline.json" > "$TMP/pj" && mv "$TMP/pj" "$R/docs/pipeline/pipeline.json"
 unnamed() { jq -n --arg m "$1" --arg id "eg-un-$RANDOM" '{last_assistant_message:$m,agent_id:$id}' | "$H/evidence-gate.sh" 2>/dev/null; }
 unnamed_blocks() { unnamed $'VERDICT: APPROVE\nno evidence' | grep -q block; }
 t  "unnamed agent with VERDICT is treated as a report" unnamed_blocks
@@ -231,12 +308,15 @@ t  "block 2 of 2" rep_blocks
 t  "third attempt is let through" rep_passes
 
 group "check-evidence.sh"
-cd "$R"
-printf 'VERDICT: APPROVE\n## Evidence\nmake test\n| make test | 0 |\n' > "$TMP/review-log.md"
-printf 'VERDICT: APPROVE\n## Evidence\nran tests fine\n' > "$TMP/bad-review-log.md"
-printf 'QA: PASS\n## Evidence\nmake test exit code 0\n' > "$TMP/qa-report.md"
-printf '## Evidence\nmake test exit code 0\n' > "$TMP/bad-qa-report.md"
+cd "$R" || exit 1
+TH0=$(cd "$R" && "$E/tree-hash.sh")
+printf 'VERDICT: APPROVE\nTree: %s\n## Evidence\nmake test\n| make test | 0 |\n' "$TH0" > "$TMP/review-log.md"
+printf 'VERDICT: APPROVE\nTree: %s\n## Evidence\nran tests fine\n' "$TH0" > "$TMP/bad-review-log.md"
+printf 'VERDICT: APPROVE\n## Evidence\nmake test\n| make test | 0 |\n' > "$TMP/notree-review-log.md"
+printf 'QA: PASS\nTree: %s\n## Evidence\nmake test exit code 0\n' "$TH0" > "$TMP/qa-report.md"
+printf 'Tree: %s\n## Evidence\nmake test exit code 0\n' "$TH0" > "$TMP/bad-qa-report.md"
 t  "good review-log passes" "$E/check-evidence.sh" "$TMP/review-log.md"
+tf "review-log without Tree fails" "$E/check-evidence.sh" "$TMP/notree-review-log.md"
 tf "review-log without test cmd fails" "$E/check-evidence.sh" "$TMP/bad-review-log.md"
 t  "good qa-report passes" "$E/check-evidence.sh" "$TMP/qa-report.md"
 tf "qa-report without QA line fails" "$E/check-evidence.sh" "$TMP/bad-qa-report.md"
@@ -247,16 +327,49 @@ F="$R/docs/features/demo"; mkdir -p "$F"
 printf '# spec\n' > "$F/spec.md"
 sha=$(git hash-object "$F/spec.md")
 printf '{"stage":"pr","spec_sha":"%s"}\n' "$sha" > "$F/state.json"
-cp "$TMP/review-log.md" "$F/review-log.md"; cp "$TMP/qa-report.md" "$F/qa-report.md"
 printf -- '- [x] T1 done\n- [x] T2 done\n' > "$F/tasks.md"
+TH=$(cd "$R" && "$E/tree-hash.sh")
+t  "tree-hash prints a 40-hex hash" bash -c "printf '%s' '$TH' | grep -Eq '^[0-9a-f]{40}$'"
+t  "tree-hash ignores docs/features" bash -c "echo note >> '$F/fix-notes.md' && [ \"\$(cd '$R' && '$E/tree-hash.sh')\" = '$TH' ]"
+t  "tree-hash changes with source" bash -c "echo x > '$R/pkg_new.go' && [ \"\$(cd '$R' && '$E/tree-hash.sh')\" != '$TH' ] && mv '$R/pkg_new.go' '$TMP/'"
+th() { (cd "$R" && "$E/tree-hash.sh"); }
+rl() { printf 'VERDICT: %s\nTree: %s\n## Evidence\n%s\n| %s | 0 |\n' "${1:-APPROVE}" "${2:-$(th)}" "${3:-make test}" "${3:-make test}" > "$F/review-log.md"; }
+qr() { printf 'QA: PASS\nTree: %s\n## Evidence\n%s exit code 0\n' "${1:-$(th)}" "${2:-make test}" > "$F/qa-report.md"; }
+rl; qr
 t  "mergeable feature passes" "$E/check-feature.sh" demo
+rl APPROVE 0000000000000000000000000000000000000000
+tf "review Tree from another tree fails" "$E/check-feature.sh" demo
+rl
+tf "source changed after QA fails" bash -c "echo x > '$R/pkg_late.go' && '$E/check-feature.sh' demo; rc=\$?; mv '$R/pkg_late.go' '$TMP/'; exit \$rc"
+t  "passes again once the tree is restored" "$E/check-feature.sh" demo
+setman() { jq --arg p "$(git -C "$R" hash-object "$F/spec.md")" --arg c "$(git -C "$R" hash-object "$R/docs/pipeline/pipeline.json")" '.manifest={spec:$p,pipeline:$c}' "$F/state.json" > "$TMP/st" && cp "$TMP/st" "$F/state.json"; }
+setpj() { jq "$1" "$R/docs/pipeline/pipeline.json" > "$TMP/pjx" && cp "$TMP/pjx" "$R/docs/pipeline/pipeline.json"; }
+setman
+t  "manifest that matches passes" "$E/check-feature.sh" demo
+setpj '.max_review_rounds=9'
+tf "pipeline.json changed after handoff fails" "$E/check-feature.sh" demo
+setpj '.max_review_rounds=3'
+t  "manifest matches again after revert" "$E/check-feature.sh" demo
+setpj '.test_cmd="true"'; setman; rl APPROVE "$(th)" true; qr "$(th)" true
+t  "--run executes test_cmd and passes when it exits 0" "$E/check-feature.sh" demo --run
+setpj '.test_cmd="false"'; setman; rl APPROVE "$(th)" false; qr "$(th)" false
+t  "without --run a report claiming exit 0 is accepted (testimony)" "$E/check-feature.sh" demo
+tf "--run catches the false claim" "$E/check-feature.sh" demo --run
+setpj '.test_cmd="true" | .security_cmd="true"'; setman; printf 'VERDICT: APPROVE\nTree: %s\n## Evidence\ntrue\n| true | 0 |\n' "$(th)" > "$F/review-log.md"; qr "$(th)" true
+t  "--run with a passing security_cmd passes" "$E/check-feature.sh" demo --run
+setpj '.security_cmd="false"'; setman; printf 'VERDICT: APPROVE\nTree: %s\n## Evidence\ntrue\n| true | 0 |\nfalse\n| false | 0 |\n' "$(th)" > "$F/review-log.md"; qr "$(th)" true
+tf "--run fails on a failing security_cmd" "$E/check-feature.sh" demo --run
+setpj '.security_cmd="gosec ./..."'; setman; printf 'VERDICT: APPROVE\nTree: %s\n## Evidence\ntrue\n| true | 0 |\n' "$(th)" > "$F/review-log.md"; qr "$(th)" true
+tf "review-log without the configured security_cmd fails check-evidence" "$E/check-feature.sh" demo
+setpj '.test_cmd="make test" | .security_cmd=""'; setman; rl; qr
+t  "restored feature passes" "$E/check-feature.sh" demo
 printf -- '- [ ] T3 open\n' >> "$F/tasks.md"
 tf "unchecked task fails" "$E/check-feature.sh" demo
 printf -- '- [x] T1 done\n' > "$F/tasks.md"
 printf 'changed\n' >> "$F/spec.md"
 tf "spec drift fails" "$E/check-feature.sh" demo
 printf '# spec\n' > "$F/spec.md"
-printf 'VERDICT: CHANGES_REQUESTED\n## Evidence\nmake test\n| make test | 1 |\n' > "$F/review-log.md"
+rl CHANGES_REQUESTED
 tf "non-APPROVE verdict fails" "$E/check-feature.sh" demo
 tf "unknown slug fails" "$E/check-feature.sh" nope
 
@@ -280,7 +393,24 @@ t  "test edit allowed for SDLC_ROLE=test-writer" hgc_tw testwriter
 echo m > "$R/Makefile"; git -C "$R" add Makefile
 tf "config edit denied while in implement" hgc cfg
 t  "config edit allowed with SDLC_ALLOW_CONFIG=1" hgc_cfg cfgok
-cd "$HERE"
+mkdir -p "$TMP/gl-find" "$TMP/gl-clean"
+printf '#!/usr/bin/env bash\nexit 1\n' > "$TMP/gl-find/gitleaks"; printf '#!/usr/bin/env bash\nexit 0\n' > "$TMP/gl-clean/gitleaks"; chmod +x "$TMP/gl-find/gitleaks" "$TMP/gl-clean/gitleaks"
+printf '{"stage":"pr","spec_sha":"x"}\n' > "$F/state.json"
+echo s > "$R/s.txt"; git -C "$R" add s.txt
+gl_commit() { ( cd "$R" && PATH="$1:$PATH" SDLC_HUMAN=1 "${@:2}" git -c user.name=t -c user.email=t@t commit -q -m secrets ); }
+tf "gitleaks finding denies the commit" gl_commit "$TMP/gl-find" env
+t  "SDLC_SKIP_SECRETS=1 bypasses once" gl_commit "$TMP/gl-find" env SDLC_SKIP_SECRETS=1
+echo s2 > "$R/s2.txt"; git -C "$R" add s2.txt
+t  "clean gitleaks run commits" gl_commit "$TMP/gl-clean" env
+echo s3 > "$R/s3.txt"; git -C "$R" add s3.txt
+t  "no gitleaks on PATH: commit proceeds with a notice" bash -c "cd '$R' && SDLC_HUMAN=1 git -c user.name=t -c user.email=t@t commit -q -m nogl 2>'$TMP/gl.err' && grep -q 'not scanned for secrets' '$TMP/gl.err'"
+mkdir -p "$TMP/nojq"; for b in /usr/bin/* /bin/*; do [ "$(basename "$b")" = jq ] || ln -sf "$b" "$TMP/nojq/" 2>/dev/null; done
+printf '{"stage":"pr","spec_sha":"x"}\n' > "$F/state.json"
+echo c > "$R/c.txt"; git -C "$R" add c.txt
+nojq_commit() { ( cd "$R" && PATH="$TMP/nojq" SDLC_HUMAN=1 "$@" git -c user.name=t -c user.email=t@t commit -q -m nojq ); }
+tf "pre-commit fails closed without jq" nojq_commit env
+t  "SDLC_SKIP_PRECOMMIT=1 lets one commit through without jq" nojq_commit env SDLC_SKIP_PRECOMMIT=1
+cd "$HERE" || exit 1
 
 echo
 echo "passed: $pass  failed: $fail"
