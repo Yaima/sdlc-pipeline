@@ -410,7 +410,7 @@ t  "waiting features sort first" jq -e '.repos[0].features[0].waiting | length >
 # HTTP: add, install, remove through the API; writes need the X-Gates header
 BP=$((20000 + RANDOM % 20000)); BC="$TMP/board.local.json"; echo '{"repos":[],"roots":[]}' > "$BC"
 python3 "$HERE/board/serve.py" --config "$BC" --port "$BP" >/dev/null 2>&1 & BPID=$!
-for i in 1 2 3 4 5 6 7 8 9 10; do curl -s -o /dev/null "http://127.0.0.1:$BP/api/state" && break; sleep 0.3; done
+for _ in 1 2 3 4 5 6 7 8 9 10; do curl -s -o /dev/null "http://127.0.0.1:$BP/api/state" && break; sleep 0.3; done
 NR="$TMP/newrepo"; mkrepo "$NR"
 t  "POST without X-Gates is refused" bash -c "[ \"\$(curl -s -o /dev/null -w '%{http_code}' -X POST http://127.0.0.1:$BP/api/repos -d '{}')\" = 403 ]"
 t  "POST with a bad path is refused" bash -c "[ \"\$(curl -s -o /dev/null -w '%{http_code}' -H 'X-Gates: 1' -X POST http://127.0.0.1:$BP/api/repos -d '{\"path\":\"$TMP/nope\"}')\" = 400 ]"

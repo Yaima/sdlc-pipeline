@@ -203,7 +203,9 @@
     var total = state.repos.reduce(function (n, r) { return n + r.features.length; }, 0);
     $('overview-sub').textContent = total ? total + ' feature' + (total === 1 ? '' : 's') + ' across ' + state.repos.length + ' repo' + (state.repos.length === 1 ? '' : 's') : '';
     var html = state.repos.map(repoSection).join('');
-    $('repos-overview').innerHTML = html || '<div class="empty"><p class="empty__title">No features in progress</p><p>Run <code>/feature &lt;slug&gt; &lt;idea&gt;</code> in a repo with the pipeline installed, or add a repo in <code>board.local.json</code>' + (state.repos.length ? '' : ' (no repos found yet)') + '.</p></div>';
+    $('repos-overview').innerHTML = html || (state.repos.length
+      ? '<div class="empty"><p class="empty__title">No features yet</p><p>' + esc(state.repos.map(function (r) { return r.name; }).join(', ')) + (state.repos.length === 1 ? ' is' : ' are') + ' on the board. In a Claude session in the repo, run <code>/feature &lt;slug&gt; &lt;one sentence&gt;</code>; the card appears here within a few seconds. <code>/codebase-map</code> writes a file and shows nothing here.</p></div>'
+      : '<div class="empty"><p class="empty__title">No repos on the board</p><p>Add one on the <a href="#repos">Repos</a> screen; it installs the pipeline if the repo lacks it.</p></div>');
     var b = $('badge-waiting'); b.hidden = !w.length; b.textContent = w.length;
   }
   function renderFeature(repoName, slug) {
@@ -237,12 +239,12 @@
     state.repos.forEach(function (repo) { repo.recent_runs.slice().reverse().slice(0, 5).forEach(function (r) {
       rows.push('<li class="live__row">' + chip('', 'finished') + '<span><span class="live__role">' + esc(r.agent) + '</span><br><span class="live__where">' + esc(repo.name) + '</span></span><span class="live__time">' + esc(since(r.stopped)) + '</span></li>');
     }); });
-    el.innerHTML = rows.join('') || '<li class="empty"><p class="empty__title">No roles running</p><p>Start lines appear here when a stage dispatches a role. Logging of start events needs the pipeline version that adds the <code>SubagentStart</code> hook.</p></li>';
+    el.innerHTML = rows.join('') || '<li class="empty"><p class="empty__title">No roles running</p><p>This screen is a process monitor: a role is listed while a stage has it executing, with how long it has run. Finished runs are listed below. Where a feature stands is on the <a href="#overview">Overview</a>.</p></li>';
     var b = $('badge-live'); b.hidden = !runs.length; b.textContent = runs.length;
   }
   function renderRules() {
     var c = state.candidates;
-    $('rules').innerHTML = c.length ? '<div class="table-wrap"><table><caption>Pending across ' + state.repos.length + ' repo' + (state.repos.length === 1 ? '' : 's') + '</caption><thead><tr><th scope="col">Date</th><th scope="col">Repo · feature</th><th scope="col">What happened</th><th scope="col">Candidate</th></tr></thead><tbody>' + c.map(function (x) { return '<tr><td>' + esc(x.date) + '</td><td>' + esc(x.repo) + (x.slug ? ' · <code>' + esc(x.slug) + '</code>' : '') + '</td><td>' + esc(x.ref ? x.ref + ': ' : '') + esc(x.what) + '</td><td>' + esc(x.candidate) + '</td></tr>'; }).join('') + '</tbody></table></div>' : '<div class="empty"><p class="empty__title">No rule candidates</p><p>They appear when a review stops for a person or a finding is waived.</p></div>';
+    $('rules').innerHTML = c.length ? '<div class="table-wrap"><table><caption>Pending across ' + state.repos.length + ' repo' + (state.repos.length === 1 ? '' : 's') + '</caption><thead><tr><th scope="col">Date</th><th scope="col">Repo · feature</th><th scope="col">What happened</th><th scope="col">Candidate</th></tr></thead><tbody>' + c.map(function (x) { return '<tr><td>' + esc(x.date) + '</td><td>' + esc(x.repo) + (x.slug ? ' · <code>' + esc(x.slug) + '</code>' : '') + '</td><td>' + esc(x.ref ? x.ref + ': ' : '') + esc(x.what) + '</td><td>' + esc(x.candidate) + '</td></tr>'; }).join('') + '</tbody></table></div>' : '<div class="empty"><p class="empty__title">No rule candidates</p><p>The review stage appends one when it stops for a person or a finding is waived. Retro turns them into rule edits. Nothing has been reviewed yet.</p></div>';
   }
   function api(path, body) {
     return fetch(path, { method: 'POST', headers: { 'Content-Type': 'application/json', 'X-Gates': '1' }, body: JSON.stringify(body || {}) })
