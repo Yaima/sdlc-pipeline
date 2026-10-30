@@ -33,6 +33,8 @@ for sh in "$HERE"/adapters/claude-code/hooks/*.sh "$HERE"/core/enforcement/*.sh 
   t "bash -n $(basename "$sh")" bash -n "$sh"
 done
 t "build.py compiles" python3 -m py_compile "$HERE/build.py"
+t "board design: contrast check passes (WCAG 2.2 AA, both themes)" python3 "$HERE/board/design/check-contrast.py"
+t "board design: components.css holds no color literals" bash -c "! grep -En '#[0-9a-fA-F]{3,8}\b|rgb\(' '$HERE/board/design/components.css'"
 
 group "build"
 t "build.py runs" python3 "$HERE/build.py"
