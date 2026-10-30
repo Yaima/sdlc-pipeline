@@ -1,0 +1,348 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Gates</title>
+<link rel="icon" href="/favicon.svg" type="image/svg+xml">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=Manrope:wght@400;500;600;700;800&display=swap">
+<link rel="stylesheet" href="/design/tokens.css">
+<link rel="stylesheet" href="/design/components.css">
+<style>
+  .screen[hidden] { display: none; }
+  .status-line { display: flex; gap: var(--sp-3); align-items: center; color: var(--md-sys-color-on-surface-variant); font: var(--md-sys-typescale-body-small); }
+  .status-line .chip { min-height: 20px; }
+  .detail__grid { display: grid; gap: var(--sp-4); grid-template-columns: 1fr; }
+  @media (min-width: 840px) { .detail__grid { grid-template-columns: 1fr 1fr; } }
+  .kv { display: grid; grid-template-columns: max-content 1fr; gap: var(--sp-1) var(--sp-4); font: var(--md-sys-typescale-body-medium); }
+  .kv dt { color: var(--md-sys-color-on-surface-variant); }
+  .kv dd { margin: 0; }
+  .timeline { display: grid; gap: var(--sp-2); }
+  .timeline li { display: grid; grid-template-columns: max-content max-content 1fr; gap: var(--sp-3); font: var(--md-sys-typescale-body-small); }
+  .timeline time { font: var(--md-sys-typescale-code-small); color: var(--md-sys-color-on-surface-variant); }
+  .back { display: inline-flex; align-items: center; gap: var(--sp-1); margin-bottom: var(--sp-4); }
+</style>
+</head>
+<body>
+<a class="skip-link" href="#main">Skip to content</a>
+<div class="app">
+  <nav class="rail" aria-label="Board sections">
+    <div class="brand" aria-label="Gates">
+      <svg class="brand__mark" viewBox="0 0 32 32" width="32" height="32" aria-hidden="true" focusable="false">
+        <rect x="1" y="1" width="30" height="30" rx="8" fill="currentColor" opacity="0.14"/>
+        <path d="M9 24V11a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v13" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/>
+        <circle cx="16" cy="18" r="3" fill="currentColor"/>
+        <path d="M6 24h20" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/>
+      </svg>
+      <span class="brand__name">Gates</span>
+    </div>
+    <a class="rail__item" href="#overview" data-nav="overview"><span class="rail__icon"><svg viewBox="0 0 24 24" width="24" height="24" aria-hidden="true" focusable="false"><path fill="currentColor" d="M3 3h8v8H3zm10 0h8v5h-8zM3 13h8v8H3zm10-3h8v11h-8z"/></svg></span><span class="rail__label">Overview</span><span class="rail__badge" id="badge-waiting" hidden></span></a>
+    <a class="rail__item" href="#live" data-nav="live"><span class="rail__icon"><svg viewBox="0 0 24 24" width="24" height="24" aria-hidden="true" focusable="false"><path fill="currentColor" d="M3 12h3.2l2.3-6 3.6 12 2.6-8 1.5 2H21v2h-5.9l-2.9-3.9-2.5 7.9L6.2 8.4 7.6 14H3z"/></svg></span><span class="rail__label">Live</span><span class="rail__badge" id="badge-live" hidden></span></a>
+    <a class="rail__item" href="#rules" data-nav="rules"><span class="rail__icon"><svg viewBox="0 0 24 24" width="24" height="24" aria-hidden="true" focusable="false"><path fill="currentColor" d="M4 5h16v2H4zm0 6h16v2H4zm0 6h10v2H4zm13.5-1.6L15.9 14l-1.4 1.4 3 3 5-5-1.4-1.4z"/></svg></span><span class="rail__label">Rules</span></a>
+    <a class="rail__item" href="#repos" data-nav="repos"><span class="rail__icon"><svg viewBox="0 0 24 24" width="24" height="24" aria-hidden="true" focusable="false"><path fill="currentColor" d="M4 4h6l2 2h8v14H4zm2 4v10h12V8z"/></svg></span><span class="rail__label">Repos</span></a>
+  </nav>
+
+  <main id="main" class="main">
+    <div class="toolbar">
+      <span class="status-line" id="status" aria-live="polite">Loading</span>
+      <button class="btn btn--text" type="button" id="refresh">Refresh</button>
+      <button class="btn btn--outlined" type="button" id="theme" aria-pressed="false">Dark theme</button>
+    </div>
+
+    <section class="screen" id="screen-overview" aria-labelledby="h-overview">
+      <h1 class="page-title" id="h-overview">Overview</h1>
+      <p class="page-sub" id="overview-sub"></p>
+      <section class="waiting" id="waiting" aria-labelledby="h-waiting"></section>
+      <div id="repos-overview"></div>
+    </section>
+
+    <section class="screen" id="screen-feature" hidden aria-labelledby="h-feature">
+      <a class="btn btn--text back" href="#overview">Back to overview</a>
+      <h1 class="page-title" id="h-feature"></h1>
+      <p class="page-sub" id="feature-sub"></p>
+      <div id="feature-body"></div>
+    </section>
+
+    <section class="screen" id="screen-live" hidden aria-labelledby="h-live">
+      <h1 class="page-title" id="h-live">Live</h1>
+      <p class="page-sub">Roles running now, from each repo's <code>agent-runs.log</code>. A role is attributed to the feature whose state changed most recently in that repo; that attribution is an inference and is labeled.</p>
+      <ul class="live" id="live" role="list" aria-live="polite"></ul>
+    </section>
+
+    <section class="screen" id="screen-rules" hidden aria-labelledby="h-rules">
+      <h1 class="page-title" id="h-rules">Rule candidates</h1>
+      <p class="page-sub">Appended by the review stage when a person had to decide. <code>/retro</code> turns them into rule edits; you apply them and delete the lines.</p>
+      <div id="rules"></div>
+    </section>
+
+    <section class="screen" id="screen-repos" hidden aria-labelledby="h-repos">
+      <h1 class="page-title" id="h-repos">Repos</h1>
+      <p class="page-sub" id="repos-sub"></p>
+      <div class="stack">
+        <section class="panel" aria-labelledby="h-add">
+          <h3 id="h-add">Add a repo</h3>
+          <form id="add-form" class="add-row" autocomplete="off">
+            <div class="field">
+              <label for="add-path">Path to a git repository</label>
+              <input class="input" id="add-path" name="path" placeholder="~/Development/my-repo" required>
+            </div>
+            <div class="field">
+              <label for="add-mode">When adding</label>
+              <select class="select" id="add-mode" name="mode">
+                <option value="minimal">Install pipeline: Claude Code + Copilot</option>
+                <option value="full">Install pipeline: all tools</option>
+                <option value="guards-only">Install guards only</option>
+                <option value="none">Just add to the board</option>
+              </select>
+            </div>
+            <button class="btn btn--outlined" type="button" id="browse-toggle" aria-expanded="false" aria-controls="browser">Browse</button>
+            <button class="btn btn--filled" type="submit">Add repo</button>
+          </form>
+          <div class="browser" id="browser" hidden></div>
+          <div id="add-msg" aria-live="polite"></div>
+        </section>
+        <section class="panel" aria-labelledby="h-onboard">
+          <h3 id="h-onboard">On the board</h3>
+          <div id="repos"></div>
+        </section>
+        <section class="panel" aria-labelledby="h-roots">
+          <h3 id="h-roots">Scan roots</h3>
+          <p class="hint">Folders scanned two levels deep for repos that already have the pipeline. Repos found this way appear on the board without being listed.</p>
+          <ul id="roots" role="list" class="actions"></ul>
+          <form id="root-form" class="add-row"><div class="field"><label for="root-path">Add a root</label><input class="input" id="root-path" placeholder="~/Development" required></div><div></div><div></div><button class="btn btn--outlined" type="submit">Add root</button></form>
+          <div id="cands-wrap" hidden>
+            <button class="btn btn--text" type="button" id="cands-toggle" aria-expanded="false" aria-controls="candidates-panel">Show git repos under your roots without the pipeline</button>
+            <div id="candidates-panel" hidden>
+              <div class="table-wrap"><table><thead><tr><th scope="col">Repo</th><th scope="col">Path</th><th scope="col"></th></tr></thead><tbody id="cand-rows"></tbody></table></div>
+            </div>
+          </div>
+        </section>
+      </div>
+    </section>
+  </main>
+</div>
+
+<script>
+(function () {
+  'use strict';
+  var state = null, timer = null;
+  var $ = function (id) { return document.getElementById(id); };
+  function esc(s) { return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) { return ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'})[c]; }); }
+  function ago(s) { if (s == null) return ''; s = Math.max(0, s|0); if (s < 60) return s + 's'; if (s < 3600) return Math.floor(s/60) + ' min'; return Math.floor(s/3600) + ' h ' + Math.floor((s%3600)/60) + ' min'; }
+  function since(ts) { if (!ts) return ''; var d = Date.parse(ts); return isNaN(d) ? ts : ago((Date.now() - d) / 1000) + ' ago'; }
+
+  // ---------- theme ----------
+  (function () {
+    var root = document.documentElement, btn = $('theme');
+    // Follows the OS setting; the toggle overrides it and the choice is remembered per browser.
+    function isDark() { var t = root.getAttribute('data-theme'); return t ? t === 'dark' : !matchMedia('(prefers-color-scheme: light)').matches; }
+    function apply(t) { if (t === 'light' || t === 'dark') root.setAttribute('data-theme', t); else root.removeAttribute('data-theme'); var dark = isDark(); btn.textContent = dark ? 'Light theme' : 'Dark theme'; btn.setAttribute('aria-pressed', String(dark)); }
+    var saved = null; try { saved = localStorage.getItem('board-theme'); } catch (e) {}
+    apply(saved);
+    btn.addEventListener('click', function () { var next = isDark() ? 'light' : 'dark'; apply(next); try { localStorage.setItem('board-theme', next); } catch (e) {} });
+    matchMedia('(prefers-color-scheme: light)').addEventListener('change', function () { if (!root.getAttribute('data-theme')) apply(null); });
+  })();
+
+  // ---------- rendering pieces ----------
+  function chip(cls, text, glyph) { return '<span class="chip ' + cls + '">' + (glyph ? '<span class="chip__glyph" aria-hidden="true"></span>' : '') + esc(text) + '</span>'; }
+  function statusChips(f) {
+    var out = [chip('chip--outline', f.mode)];
+    if (f.live) out.push(chip('chip--live', f.live.agent + ' running · ' + ago(f.live.age_s), true));
+    if (f.stage === 'needs-human') out.push(chip('chip--blocked', 'needs human · round ' + f.review_round + ' of ' + f.max_review_rounds, true));
+    else if (f.waiting.length) out.push(chip('chip--waiting', 'waiting on you', true));
+    if (f.last_verdict === 'APPROVE') out.push(chip('chip--approve', 'APPROVE · round ' + f.review_round, true));
+    else if (f.last_verdict === 'CHANGES_REQUESTED') out.push(chip('chip--changes', 'CHANGES_REQUESTED · round ' + f.review_round, true));
+    else if (f.last_verdict === 'BLOCKED') out.push(chip('chip--blocked', 'BLOCKED', true));
+    if (f.qa === 'PASS') out.push(chip('chip--approve', 'QA: PASS', true));
+    else if (f.qa) out.push(chip('chip--blocked', 'QA: ' + f.qa, true));
+    return out.join('');
+  }
+  function track(f) {
+    var label = f.track.map(function (t) { return t.stage + ' ' + ({done:'passed', current:'in progress', waiting:'waiting on you', stopped:'stopped', ahead:'not started'})[t.state]; }).join(', ');
+    return '<ol class="track" role="list" aria-label="Stages: ' + esc(label) + '">' + f.track.map(function (t) {
+      var short = t.stage === 'implement' ? ' data-short="impl"' : '';
+      return '<li class="track__step" data-state="' + t.state + '"><span class="track__bar"></span><span class="track__name"' + short + '>' + esc(t.stage) + '</span></li>';
+    }).join('') + '</ol>';
+  }
+  function sev(c) { return '<span class="sev"><span data-sev="blocker" data-n="' + c.blocker + '">blocker</span><span data-sev="major" data-n="' + c.major + '">major</span><span data-sev="minor" data-n="' + c.minor + '">minor</span></span>'; }
+  function treeLine(t) {
+    if (!t) return '';
+    if (t.match === true) return '<span class="tree tree--match">✓ matches review <code>' + esc(t.reviewed.slice(0, 7)) + '</code></span>';
+    if (t.match === false) return '<span class="tree tree--drift">✕ changed since review</span>';
+    return '<span class="tree">reviewed <code>' + esc(t.reviewed.slice(0, 7)) + '</code>, current tree unknown</span>';
+  }
+  function card(repo, f) {
+    var cls = 'card' + (f.stage === 'needs-human' ? ' card--blocked' : f.waiting.length ? ' card--attention' : f.live ? ' card--live' : '');
+    var foot = [];
+    if (f.blast_radius) foot.push('<div><dt>Blast radius</dt> <dd>' + esc(f.blast_radius) + '</dd></div>');
+    if (f.tasks.total) foot.push('<div><dt>Tasks</dt> <dd>' + f.tasks.done + ' of ' + f.tasks.total + '</dd></div>');
+    if (f.tree) foot.push('<div><dt>Tree</dt> <dd>' + treeLine(f.tree) + '</dd></div>');
+    if (f.last_verdict) foot.push('<div><dt>Findings</dt> <dd>' + sev(f.findings) + '</dd></div>');
+    if (f.cost_usd) foot.push('<div><dt>Cost</dt> <dd>$' + Number(f.cost_usd).toFixed(2) + '</dd></div>');
+    return '<li class="' + cls + '"><div class="card__head"><span class="card__slug"><a class="card__title-link" href="#feature/' + encodeURIComponent(repo.name) + '/' + encodeURIComponent(f.slug) + '"><code>' + esc(f.slug) + '</code></a></span><span class="card__spacer"></span>' + statusChips(f) + '</div>' + track(f) + (foot.length ? '<dl class="card__foot">' + foot.join('') + '</dl>' : '') + '</li>';
+  }
+  function repoSection(repo) {
+    if (!repo.features.length) return '';
+    return '<section class="repo" aria-labelledby="h-repo-' + esc(repo.name) + '"><div class="repo__head"><h2 class="repo__name" id="h-repo-' + esc(repo.name) + '">' + esc(repo.name) + '</h2><span class="repo__meta">' + repo.features.length + ' feature' + (repo.features.length === 1 ? '' : 's') + (repo.version ? ' · pipeline ' + esc(repo.version) : '') + '</span><span class="repo__path">' + esc(repo.path.replace(/^\/Users\/[^/]+|^\/home\/[^/]+/, '~')) + '</span></div><ul class="cards" role="list">' + repo.features.map(function (f) { return card(repo, f); }).join('') + '</ul></section>';
+  }
+
+  // ---------- screens ----------
+  function renderOverview() {
+    var w = state.waiting, el = $('waiting');
+    if (w.length) {
+      el.className = 'waiting';
+      el.innerHTML = '<h2 class="waiting__title" id="h-waiting">Waiting on you (' + w.length + ')</h2><ul class="waiting__list" role="list">' + w.map(function (x) {
+        return '<li class="waiting__item"><span class="waiting__where">' + esc(x.repo) + ' · <code>' + esc(x.slug) + '</code> · ' + esc(x.gate) + ' gate' + (x.to_role ? ' (' + esc(x.to_role) + ')' : '') + '</span><code class="waiting__cmd">' + esc(x.resume) + '</code><span class="waiting__q">' + esc(x.question) + '</span></li>';
+      }).join('') + '</ul>';
+    } else {
+      el.className = 'waiting waiting--empty';
+      el.innerHTML = '<h2 class="waiting__title" id="h-waiting">Nothing is waiting on you</h2><p>Every feature is either running, finished, or waiting on CI.</p>';
+    }
+    var total = state.repos.reduce(function (n, r) { return n + r.features.length; }, 0);
+    $('overview-sub').textContent = total ? total + ' feature' + (total === 1 ? '' : 's') + ' across ' + state.repos.length + ' repo' + (state.repos.length === 1 ? '' : 's') : '';
+    var html = state.repos.map(repoSection).join('');
+    $('repos-overview').innerHTML = html || '<div class="empty"><p class="empty__title">No features in progress</p><p>Run <code>/feature &lt;slug&gt; &lt;idea&gt;</code> in a repo with the pipeline installed, or add a repo in <code>board.local.json</code>' + (state.repos.length ? '' : ' (no repos found yet)') + '.</p></div>';
+    var b = $('badge-waiting'); b.hidden = !w.length; b.textContent = w.length;
+  }
+  function renderFeature(repoName, slug) {
+    var repo = state.repos.filter(function (r) { return r.name === repoName; })[0];
+    var f = repo && repo.features.filter(function (x) { return x.slug === slug; })[0];
+    if (!f) { $('h-feature').textContent = 'Feature not found'; $('feature-sub').textContent = repoName + ' / ' + slug; $('feature-body').innerHTML = ''; return; }
+    $('h-feature').innerHTML = '<code>' + esc(f.slug) + '</code>';
+    $('feature-sub').textContent = repo.name + ' · ' + f.mode + ' tier · stage ' + f.stage + (f.feature_branch ? ' · ' + f.feature_branch : '');
+    var waiting = f.waiting.length ? '<section class="waiting" aria-label="Waiting on you"><h2 class="waiting__title">Waiting on you</h2><ul class="waiting__list" role="list">' + f.waiting.map(function (x) { return '<li class="waiting__item"><span class="waiting__where">' + esc(x.gate) + ' gate</span><code class="waiting__cmd">' + esc(x.resume) + '</code><span class="waiting__q">' + esc(x.question) + '</span></li>'; }).join('') + '</ul></section>' : '';
+    var kv = '<dl class="kv">' +
+      '<dt>Status</dt><dd>' + statusChips(f) + '</dd>' +
+      (f.blast_radius ? '<dt>Blast radius</dt><dd>' + esc(f.blast_radius) + '</dd>' : '') +
+      '<dt>Review</dt><dd>round ' + f.review_round + ' of ' + f.max_review_rounds + (f.last_verdict ? ' · ' + esc(f.last_verdict) : '') + (f.waived ? ' · ' + f.waived + ' waived' : '') + '</dd>' +
+      (f.last_verdict ? '<dt>Findings</dt><dd>' + sev(f.findings) + '</dd>' : '') +
+      (f.stopping_criterion ? '<dt>Next round if</dt><dd>' + esc(f.stopping_criterion) + '</dd>' : '') +
+      (f.tree ? '<dt>Tree</dt><dd>' + treeLine(f.tree) + (f.tree.current ? ' <code>' + esc(f.tree.current.slice(0, 7)) + '</code>' : '') + '</dd>' : '') +
+      '<dt>Tasks</dt><dd>' + f.tasks.done + ' of ' + f.tasks.total + (f.tasks.disputes.length ? ' · ' + f.tasks.disputes.length + ' dispute' + (f.tasks.disputes.length === 1 ? '' : 's') : '') + '</dd>' +
+      (f.cost_usd ? '<dt>Cost</dt><dd>$' + Number(f.cost_usd).toFixed(2) + '</dd>' : '') +
+      (f.ticket ? '<dt>Ticket</dt><dd>' + esc(f.ticket) + '</dd>' : '') +
+      '<dt>Folder</dt><dd><code>' + esc(f.path) + '</code></dd></dl>';
+    var hist = f.history.length ? '<ol class="timeline" role="list">' + f.history.slice().reverse().map(function (h) { return '<li><time>' + esc(h.at || '') + '</time><span>' + esc(h.stage || '') + '</span><span>' + esc(h.result || '') + (h.by ? ' (' + esc(h.by) + ')' : '') + '</span></li>'; }).join('') + '</ol>' : '<p class="hint">No history recorded yet.</p>';
+    $('feature-body').innerHTML = waiting + '<div class="panel" style="margin-bottom: var(--sp-4)">' + track(f) + '</div><div class="detail__grid"><div class="panel"><h3>State</h3>' + kv + '</div><div class="panel"><h3>Recent history</h3>' + hist + '</div></div>';
+  }
+  function renderLive() {
+    var runs = state.running, el = $('live');
+    var rows = runs.map(function (r) {
+      var repo = state.repos.filter(function (x) { return x.name === r.repo; })[0];
+      var f = repo && repo.features.filter(function (x) { return x.live; })[0];
+      return '<li class="live__row">' + chip('chip--live', 'running', true) + '<span><span class="live__role">' + esc(r.agent) + '</span><br><span class="live__where">' + esc(r.repo) + (f ? ' · <code>' + esc(f.slug) + '</code> <span class="inferred">(inferred)</span>' : '') + '</span></span><span class="live__time">' + ago(r.age_s) + '</span></li>';
+    });
+    state.repos.forEach(function (repo) { repo.recent_runs.slice().reverse().slice(0, 5).forEach(function (r) {
+      rows.push('<li class="live__row">' + chip('', 'finished') + '<span><span class="live__role">' + esc(r.agent) + '</span><br><span class="live__where">' + esc(repo.name) + '</span></span><span class="live__time">' + esc(since(r.stopped)) + '</span></li>');
+    }); });
+    el.innerHTML = rows.join('') || '<li class="empty"><p class="empty__title">No roles running</p><p>Start lines appear here when a stage dispatches a role. Logging of start events needs the pipeline version that adds the <code>SubagentStart</code> hook.</p></li>';
+    var b = $('badge-live'); b.hidden = !runs.length; b.textContent = runs.length;
+  }
+  function renderRules() {
+    var c = state.candidates;
+    $('rules').innerHTML = c.length ? '<div class="table-wrap"><table><caption>Pending across ' + state.repos.length + ' repo' + (state.repos.length === 1 ? '' : 's') + '</caption><thead><tr><th scope="col">Date</th><th scope="col">Repo · feature</th><th scope="col">What happened</th><th scope="col">Candidate</th></tr></thead><tbody>' + c.map(function (x) { return '<tr><td>' + esc(x.date) + '</td><td>' + esc(x.repo) + (x.slug ? ' · <code>' + esc(x.slug) + '</code>' : '') + '</td><td>' + esc(x.ref ? x.ref + ': ' : '') + esc(x.what) + '</td><td>' + esc(x.candidate) + '</td></tr>'; }).join('') + '</tbody></table></div>' : '<div class="empty"><p class="empty__title">No rule candidates</p><p>They appear when a review stops for a person or a finding is waived.</p></div>';
+  }
+  function api(path, body) {
+    return fetch(path, { method: 'POST', headers: { 'Content-Type': 'application/json', 'X-Gates': '1' }, body: JSON.stringify(body || {}) })
+      .then(function (r) { return r.json().then(function (j) { if (!r.ok) throw new Error(j.error || (j.log ? 'install failed:\n' + j.log : 'HTTP ' + r.status)); return j; }); });
+  }
+  function say(el, kind, text, log) { el.innerHTML = '<div class="msg msg--' + kind + '">' + esc(text) + '</div>' + (log ? '<pre class="log">' + esc(log) + '</pre>' : ''); }
+  function renderRepos() {
+    $('repos-sub').textContent = (state.config_path ? 'Config: ' + state.config_path : '') + (state.pipeline_version ? ' · pipeline checkout is ' + state.pipeline_version : '');
+    var listed = state.config.repos.map(function (r) { return r.replace(/^\/Users\/[^/]+|^\/home\/[^/]+/, '~'); });
+    $('repos').innerHTML = state.repos.length ? '<div class="table-wrap"><table><thead><tr><th scope="col">Repo</th><th scope="col">Path</th><th scope="col">Pipeline</th><th scope="col">Features</th><th scope="col">Running</th><th scope="col"></th></tr></thead><tbody>' + state.repos.map(function (r) {
+      var behind = state.pipeline_version && r.version && r.version < state.pipeline_version;
+      var ver = r.version ? esc(r.version) + (behind ? ' ' + chip('chip--changes', 'upgrade available') : '') : chip('chip--outline', 'not installed');
+      var inList = state.config.repos.some(function (c) { return c.replace(/^~/, '') && r.path.endsWith(c.replace(/^~\//, '/')) || c === r.path; });
+      var acts = '<div class="actions">' +
+        '<select class="select" data-mode-for="' + esc(r.path) + '" aria-label="Install mode for ' + esc(r.name) + '"><option value="minimal">minimal</option><option value="full">full</option><option value="guards-only">guards only</option></select>' +
+        '<button class="btn btn--tonal" type="button" data-act="install" data-path="' + esc(r.path) + '">' + (r.version ? (behind ? 'Upgrade' : 'Reinstall') : 'Install') + '</button>' +
+        (inList ? '<button class="btn btn--text" type="button" data-act="remove" data-path="' + esc(r.path) + '">Remove</button>' : '<span class="inferred">found by root scan</span>') + '</div>';
+      return '<tr><td>' + esc(r.name) + '</td><td><code>' + esc(r.path) + '</code></td><td>' + ver + '</td><td>' + r.features.length + '</td><td>' + r.running.length + '</td><td>' + acts + '</td></tr>';
+    }).join('') + '</tbody></table></div><div id="repo-msg" aria-live="polite"></div>' : '<div class="empty"><p class="empty__title">No repos on the board</p><p>Add one above, or add a scan root.</p></div>';
+    // Repos under the roots that lack the pipeline stay out of sight unless asked for; the board shows what you add.
+    var cands = state.repo_candidates || [];
+    $('cands-wrap').hidden = !cands.length;
+    $('cands-toggle').textContent = (candsOpen ? 'Hide' : 'Show') + ' ' + cands.length + ' git repo' + (cands.length === 1 ? '' : 's') + ' under your roots without the pipeline';
+    $('candidates-panel').hidden = !candsOpen;
+    $('cand-rows').innerHTML = cands.map(function (c) { return '<tr><td>' + esc(c.name) + '</td><td><code>' + esc(c.path) + '</code></td><td><div class="actions"><select class="select" data-mode-for="' + esc(c.path) + '" aria-label="Install mode for ' + esc(c.name) + '"><option value="minimal">minimal</option><option value="full">full</option><option value="guards-only">guards only</option></select><button class="btn btn--filled" type="button" data-act="add-install" data-path="' + esc(c.path) + '">Add and install</button><button class="btn btn--outlined" type="button" data-act="add-only" data-path="' + esc(c.path) + '">Add only</button></div></td></tr>'; }).join('');
+    $('roots').innerHTML = state.config.roots.map(function (r) { return '<li class="chip chip--outline">' + esc(r) + ' <button class="btn btn--text" type="button" data-act="root-remove" data-path="' + esc(r) + '" aria-label="Remove root ' + esc(r) + '" style="min-height:24px;padding:0 4px">✕</button></li>'; }).join('') || '<li class="hint">No roots. Repos must be listed one by one.</li>';
+  }
+  // actions on the repos screen
+  $('screen-repos').addEventListener('click', function (e) {
+    var b = e.target.closest('button[data-act]'); if (!b) return;
+    var act = b.getAttribute('data-act'), path = b.getAttribute('data-path');
+    var modeSel = document.querySelector('select[data-mode-for="' + path.replace(/"/g, '\\"') + '"]'); var mode = modeSel ? modeSel.value : 'minimal';
+    var msg = $('repo-msg') || $('add-msg'); b.disabled = true;
+    var p;
+    if (act === 'install') p = api('/api/repos/install', { path: path, mode: mode }).then(function (j) { say(msg, 'ok', 'Pipeline installed in ' + path, j.log); });
+    else if (act === 'remove') p = api('/api/repos/remove', { path: path }).then(function (j) { say(msg, 'ok', 'Removed from the board. ' + j.note); });
+    else if (act === 'add-install') p = api('/api/repos', { path: path, install: true, mode: mode }).then(function (j) { say($('add-msg'), 'ok', 'Added and installed: ' + j.added, j.log); });
+    else if (act === 'add-only') p = api('/api/repos', { path: path }).then(function (j) { say($('add-msg'), 'ok', 'Added: ' + j.added); });
+    else if (act === 'root-remove') p = api('/api/roots', { path: path, remove: true }).then(function () { say($('add-msg'), 'ok', 'Root removed'); });
+    p.catch(function (err) { say(msg, 'err', err.message); }).then(function () { b.disabled = false; return load(); });
+  });
+  $('add-form').addEventListener('submit', function (e) {
+    e.preventDefault(); var path = $('add-path').value.trim(), mode = $('add-mode').value, btn = e.target.querySelector('[type=submit]'); btn.disabled = true;
+    api('/api/repos', { path: path, install: mode !== 'none', mode: mode }).then(function (j) { say($('add-msg'), 'ok', (j.installed ? 'Added and installed: ' : 'Added: ') + j.added, j.log); $('add-path').value = ''; })
+      .catch(function (err) { say($('add-msg'), 'err', err.message); }).then(function () { btn.disabled = false; return load(); });
+  });
+  $('root-form').addEventListener('submit', function (e) {
+    e.preventDefault(); var path = $('root-path').value.trim();
+    api('/api/roots', { path: path }).then(function () { say($('add-msg'), 'ok', 'Root added: ' + path); $('root-path').value = ''; }).catch(function (err) { say($('add-msg'), 'err', err.message); }).then(load);
+  });
+  // folder browser
+  function openBrowser(path) {
+    fetch('/api/browse?path=' + encodeURIComponent(path || $('add-path').value || '~')).then(function (r) { return r.json(); }).then(function (d) {
+      var el = $('browser'); el.hidden = false; $('browse-toggle').setAttribute('aria-expanded', 'true');
+      el.innerHTML = '<div class="browser__head">' + (d.parent ? '<button class="btn btn--text" type="button" data-browse="' + esc(d.parent) + '" style="min-height:32px">Up</button>' : '') + '<span>' + esc(d.path) + '</span><button class="btn btn--tonal" type="button" data-pick="' + esc(d.path) + '" style="min-height:32px;margin-left:auto">Use this folder</button></div>' +
+        d.dirs.map(function (x) { return '<button class="browser__row" type="button" data-browse="' + esc(x.path) + '">' + esc(x.name) + (x.pipeline ? chip('chip--approve', 'pipeline') : x.git ? chip('chip--outline', 'git') : '') + '</button>'; }).join('') +
+        (d.dirs.length ? '' : '<div class="browser__row">No subfolders</div>');
+    });
+  }
+  var candsOpen = false;
+  $('cands-toggle').addEventListener('click', function () { candsOpen = !candsOpen; this.setAttribute("aria-expanded", String(candsOpen)); renderRepos(); });
+  $('browse-toggle').addEventListener('click', function () { var el = $('browser'); if (!el.hidden) { el.hidden = true; this.setAttribute('aria-expanded', 'false'); } else openBrowser(); });
+  $('browser').addEventListener('click', function (e) {
+    var pick = e.target.closest('[data-pick]'); if (pick) { $('add-path').value = pick.getAttribute('data-pick'); $('browser').hidden = true; $('browse-toggle').setAttribute('aria-expanded', 'false'); $('add-path').focus(); return; }
+    var go = e.target.closest('[data-browse]'); if (go) openBrowser(go.getAttribute('data-browse'));
+  });
+
+  // ---------- routing ----------
+  function route() {
+    var h = location.hash.replace(/^#/, '') || 'overview';
+    var parts = h.split('/'), name = parts[0];
+    ['overview', 'feature', 'live', 'rules', 'repos'].forEach(function (s) { $('screen-' + s).hidden = s !== name; });
+    document.querySelectorAll('.rail__item').forEach(function (a) { var on = a.getAttribute('data-nav') === (name === 'feature' ? 'overview' : name); if (on) a.setAttribute('aria-current', 'page'); else a.removeAttribute('aria-current'); });
+    if (!state) return;
+    if (name === 'overview') renderOverview();
+    else if (name === 'feature') renderFeature(decodeURIComponent(parts[1] || ''), decodeURIComponent(parts[2] || ''));
+    else if (name === 'live') renderLive();
+    else if (name === 'rules') renderRules();
+    else if (name === 'repos') renderRepos();
+    document.title = (name === 'feature' && parts[2] ? decodeURIComponent(parts[2]) + ' · ' : name === 'overview' ? '' : name.charAt(0).toUpperCase() + name.slice(1) + ' · ') + 'Gates';
+  }
+
+  // ---------- data ----------
+  function load() {
+    return fetch('/api/state', { cache: 'no-store' }).then(function (r) { if (!r.ok) throw new Error('HTTP ' + r.status); return r.json(); }).then(function (s) {
+      if (!s.api || s.api < 2) throw new Error('the running serve.py is older than this page. Stop it and start it again: python3 board/serve.py');
+      s.config = s.config || { repos: [], roots: [] }; s.repo_candidates = s.repo_candidates || [];
+      state = s;
+      $('status').innerHTML = 'Updated ' + esc(new Date(s.generated_at).toLocaleTimeString()) + (s.running.length ? ' · ' + chip('chip--live', s.running.length + ' running', true) : '');
+      renderLive(); renderOverview(); route();
+    }).catch(function (e) {
+      $('status').textContent = 'Could not read state: ' + e.message + (/older than/.test(e.message) ? '' : '. Is serve.py still running?');
+    });
+  }
+  $('refresh').addEventListener('click', load);
+  window.addEventListener('hashchange', route);
+  document.addEventListener('visibilitychange', function () { if (document.visibilityState === 'visible') load(); });
+  load();
+  timer = setInterval(function () { if (document.visibilityState === 'visible') load(); }, 5000);
+})();
+</script>
+</body>
+</html>

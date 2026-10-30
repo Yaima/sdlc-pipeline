@@ -6,7 +6,7 @@
 <title>Board design system</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=Manrope:wght@400;500;600;700;800&display=swap">
 <link rel="stylesheet" href="tokens.css">
 <link rel="stylesheet" href="components.css">
 <style>
@@ -36,7 +36,15 @@
 <a class="skip-link" href="#main">Skip to content</a>
 <div class="app">
   <nav class="rail" aria-label="Board sections">
-    <a class="rail__brand" href="#main" aria-label="sdlc pipeline board"><svg viewBox="0 0 24 24" width="28" height="28" aria-hidden="true" focusable="false"><path fill="currentColor" d="M4 6h4v4H4zm6 1h10v2H10zM4 14h4v4H4zm6 1h10v2H10z"/><path fill="currentColor" d="M6 10v4h-0.001" stroke="currentColor" stroke-width="2"/></svg><span class="rail__brand-text">sdlc</span></a>
+    <div class="brand" aria-label="Gates, the sdlc-pipeline board">
+      <svg class="brand__mark" viewBox="0 0 32 32" width="32" height="32" aria-hidden="true" focusable="false">
+        <rect x="1" y="1" width="30" height="30" rx="8" fill="currentColor" opacity="0.14"/>
+        <path d="M9 24V11a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v13" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/>
+        <circle cx="16" cy="18" r="3" fill="currentColor"/>
+        <path d="M6 24h20" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/>
+      </svg>
+      <span class="brand__name">Gates</span>
+    </div>
     <a class="rail__item" href="#overview" aria-current="page"><span class="rail__icon"><svg viewBox="0 0 24 24" width="24" height="24" aria-hidden="true" focusable="false"><path fill="currentColor" d="M3 3h8v8H3zm10 0h8v5h-8zM3 13h8v8H3zm10-3h8v11h-8z"/></svg></span><span class="rail__label">Overview</span></a>
     <a class="rail__item" href="#live"><span class="rail__icon"><svg viewBox="0 0 24 24" width="24" height="24" aria-hidden="true" focusable="false"><path fill="currentColor" d="M3 12h3.2l2.3-6 3.6 12 2.6-8 1.5 2H21v2h-5.9l-2.9-3.9-2.5 7.9L6.2 8.4 7.6 14H3z"/></svg></span><span class="rail__label">Live</span></a>
     <a class="rail__item" href="#candidates"><span class="rail__icon"><svg viewBox="0 0 24 24" width="24" height="24" aria-hidden="true" focusable="false"><path fill="currentColor" d="M4 5h16v2H4zm0 6h16v2H4zm0 6h10v2H4zm13.5-1.6L15.9 14l-1.4 1.4 3 3 5-5-1.4-1.4z"/></svg></span><span class="rail__label">Rules</span></a>
@@ -214,8 +222,57 @@
       </div>
     </section>
 
+    <!-- ============================ Sample: repos ============================ -->
+    <section class="spec" id="repos" aria-labelledby="h-repos">
+      <h2 class="spec__title" id="h-repos">Repos screen</h2>
+      <p class="spec__note">Where repos are added to the board and the pipeline is installed or upgraded in them. Inputs and selects share one height (44px) and one border; the folder browser is a list of 44px rows.</p>
+      <div class="stack">
+        <section class="panel" aria-labelledby="h-add-s">
+          <h3 id="h-add-s">Add a repo</h3>
+          <div class="add-row">
+            <div class="field"><label for="s-path">Path to a git repository</label><input class="input" id="s-path" value="~/Development/positronic-mind"></div>
+            <div class="field"><label for="s-mode">When adding</label><select class="select" id="s-mode"><option>Install pipeline: Claude Code + Copilot</option><option>Install pipeline: all tools</option><option>Install guards only</option><option>Just add to the board</option></select></div>
+            <button class="btn btn--outlined" type="button" aria-expanded="true">Browse</button>
+            <button class="btn btn--filled" type="button">Add repo</button>
+          </div>
+          <div class="browser">
+            <div class="browser__head"><button class="btn btn--text" type="button" style="min-height:32px">Up</button><span>~/Development</span><button class="btn btn--tonal" type="button" style="min-height:32px;margin-left:auto">Use this folder</button></div>
+            <button class="browser__row" type="button">agent-apply <span class="chip chip--outline">git</span></button>
+            <button class="browser__row" type="button">positronic-mind <span class="chip chip--approve">pipeline</span></button>
+            <button class="browser__row" type="button">sdlc-pipeline-public <span class="chip chip--outline">git</span></button>
+          </div>
+          <div class="msg msg--ok">Added and installed: ~/Development/positronic-mind</div>
+        </section>
+        <section class="panel" aria-labelledby="h-board-s">
+          <h3 id="h-board-s">On the board</h3>
+          <div class="table-wrap"><table>
+            <thead><tr><th scope="col">Repo</th><th scope="col">Path</th><th scope="col">Pipeline</th><th scope="col">Features</th><th scope="col">Running</th><th scope="col"></th></tr></thead>
+            <tbody>
+              <tr><td>positronic-mind</td><td><code>~/Development/positronic-mind</code></td><td>2026.10.29</td><td>1</td><td>0</td><td><div class="actions"><select class="select" aria-label="Install mode"><option>minimal</option><option>full</option><option>guards only</option></select><button class="btn btn--tonal" type="button">Reinstall</button><button class="btn btn--text" type="button">Remove</button></div></td></tr>
+              <tr><td>billing-service</td><td><code>~/src/billing-service</code></td><td>2026.10.27 <span class="chip chip--changes">upgrade available</span></td><td>3</td><td>1</td><td><div class="actions"><select class="select" aria-label="Install mode"><option>minimal</option><option>full</option><option>guards only</option></select><button class="btn btn--tonal" type="button">Upgrade</button><span class="inferred">found by root scan</span></div></td></tr>
+            </tbody>
+          </table></div>
+        </section>
+        <section class="panel" aria-labelledby="h-roots-s">
+          <h3 id="h-roots-s">Scan roots</h3>
+          <p class="hint">Folders scanned two levels deep for repos that already have the pipeline.</p>
+          <ul role="list" class="actions"><li class="chip chip--outline">~/Development <button class="btn btn--text" type="button" aria-label="Remove root" style="min-height:24px;padding:0 4px">✕</button></li></ul>
+          <div>
+            <button class="btn btn--text" type="button" aria-expanded="true">Hide 2 git repos under your roots without the pipeline</button>
+            <div class="table-wrap"><table>
+              <thead><tr><th scope="col">Repo</th><th scope="col">Path</th><th scope="col"></th></tr></thead>
+              <tbody>
+                <tr><td>agent-apply</td><td><code>~/Development/agent-apply</code></td><td><div class="actions"><select class="select" aria-label="Install mode"><option>minimal</option><option>full</option><option>guards only</option></select><button class="btn btn--filled" type="button">Add and install</button><button class="btn btn--outlined" type="button">Add only</button></div></td></tr>
+              </tbody>
+            </table></div>
+          </div>
+          <p class="spec__note">Repos without the pipeline stay collapsed; the board shows what you add. Side-by-side action buttons share one minimum width.</p>
+        </section>
+      </div>
+    </section>
+
     <!-- ============================ Tokens ============================ -->
-    <section class="spec" id="repos" aria-labelledby="h-color">
+    <section class="spec" id="color" aria-labelledby="h-color">
       <h2 class="spec__title" id="h-color">Color roles</h2>
       <p class="spec__note">Material 3 roles. The pipeline semantics (<code>--sdlc-*</code>) map onto them, so a retheme changes the reference palette at the top of <code>tokens.css</code> and everything follows. Every pair the components use passes WCAG 2.2 AA in both themes; <code>check-contrast.py</code> verifies it.</p>
       <div class="swatches" id="swatches"></div>
@@ -223,7 +280,7 @@
 
     <section class="spec" aria-labelledby="h-type">
       <h2 class="spec__title" id="h-type">Type scale</h2>
-      <p class="spec__note">IBM Plex Sans for the interface, IBM Plex Mono only for values that are code: slugs, hashes, commands. Body line length stays under 80 characters.</p>
+      <p class="spec__note">Manrope for the interface (the AgentTrust ID brand face), IBM Plex Mono only for values that are code: slugs, hashes, commands. Body line length stays under 80 characters.</p>
       <div class="type-row"><code>headline-small</code><span style="font: var(--md-sys-typescale-headline-small)">Waiting on you (2)</span></div>
       <div class="type-row"><code>title-large</code><span style="font: var(--md-sys-typescale-title-large)">billing-service</span></div>
       <div class="type-row"><code>title-medium</code><span style="font: var(--md-sys-typescale-title-medium)">Confirm the task list</span></div>
@@ -240,10 +297,10 @@
       <p class="spec__note">Status is a shape, a color, and a word, following the convention shared by GitLab, GitHub Actions, and Argo CD: check passed, cross failed, dot running, pause waiting on a person, circle not started. Targets are 24px minimum for chips and 44px for buttons.</p>
       <div class="grid-2">
         <div>
-          <div class="row" style="margin-bottom: var(--sp-3)">
+          <div class="row">
             <span class="chip chip--outline">lite</span><span class="chip chip--outline">standard</span><span class="chip chip--outline">full</span>
           </div>
-          <div class="row" style="margin-bottom: var(--sp-3)">
+          <div class="row">
             <span class="chip chip--approve"><span class="chip__glyph" aria-hidden="true"></span>APPROVE</span><span class="chip chip--changes"><span class="chip__glyph" aria-hidden="true"></span>CHANGES_REQUESTED</span><span class="chip chip--blocked"><span class="chip__glyph" aria-hidden="true"></span>BLOCKED</span>
             <span class="chip chip--waiting"><span class="chip__glyph" aria-hidden="true"></span>waiting on you</span>
             <span class="chip chip--live"><span class="chip__dot" aria-hidden="true"></span>running</span>
@@ -253,7 +310,7 @@
           </div>
         </div>
         <div>
-          <div class="row" style="margin-bottom: var(--sp-3)">
+          <div class="row">
             <button class="btn btn--filled" type="button">Answer gate</button>
             <button class="btn btn--tonal" type="button">Waive finding</button>
             <button class="btn btn--outlined" type="button">Open review log</button>
@@ -274,10 +331,13 @@
   // Theme toggle: data-theme on <html> overrides the OS setting; remembered per browser.
   (function () {
     var root = document.documentElement, btn = document.getElementById('theme');
-    function apply(t) { if (t) root.setAttribute('data-theme', t); else root.removeAttribute('data-theme'); var dark = t ? t === 'dark' : matchMedia('(prefers-color-scheme: dark)').matches; btn.textContent = dark ? 'Light theme' : 'Dark theme'; btn.setAttribute('aria-pressed', String(dark)); }
+    // Follows the OS setting; the toggle overrides it and the choice is remembered per browser.
+    function isDark() { var t = root.getAttribute('data-theme'); return t ? t === 'dark' : !matchMedia('(prefers-color-scheme: light)').matches; }
+    function apply(t) { if (t === 'light' || t === 'dark') root.setAttribute('data-theme', t); else root.removeAttribute('data-theme'); var dark = isDark(); btn.textContent = dark ? 'Light theme' : 'Dark theme'; btn.setAttribute('aria-pressed', String(dark)); }
     var saved = null; try { saved = localStorage.getItem('board-theme'); } catch (e) {}
     apply(saved);
-    btn.addEventListener('click', function () { var dark = root.getAttribute('data-theme') === 'dark' || (!root.getAttribute('data-theme') && matchMedia('(prefers-color-scheme: dark)').matches); var next = dark ? 'light' : 'dark'; apply(next); try { localStorage.setItem('board-theme', next); } catch (e) {} });
+    btn.addEventListener('click', function () { var next = isDark() ? 'light' : 'dark'; apply(next); try { localStorage.setItem('board-theme', next); } catch (e) {} });
+    matchMedia('(prefers-color-scheme: light)').addEventListener('change', function () { if (!root.getAttribute('data-theme')) apply(null); });
   })();
   // Swatches from the live computed tokens, so the list is always the real palette.
   (function () {

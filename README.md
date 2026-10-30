@@ -15,6 +15,16 @@ idea ─► grill ─► prd ─► handoff ─► implement ─► review ─�
 
 That is the `full` tier. `standard` starts at `prd`; `lite` starts at a one-paragraph spec. All three share implement, review, and qa.
 
+## Start here
+
+```bash
+git clone https://github.com/Yaima/sdlc-pipeline.git ~/src/sdlc-pipeline
+cd ~/src/sdlc-pipeline
+python3 board/serve.py          # opens Gates at http://localhost:7777
+```
+
+Open the Repos screen, paste or browse to a repo, pick what to install, and click Add repo. That runs `install.sh` into that repo and puts it on the board. The board shows the repos you add and nothing else; the config lives in `board/board.local.json`, which is gitignored. Then open the repo in your coding tool and run `feature <slug>`; the board shows every gate waiting on you across your repos. Prefer the terminal? `./install.sh /path/to/your-repo` does the same install, with the options under [Install in a repo](#install-in-a-repo).
+
 ## Security checks
 
 Two layers, and the pipeline names which is which. The reviewer applies a checklist to every boundary the diff touches (input validation, authorization on new endpoints or actions, secrets in code, unsafe deserialization, injection, path traversal, unbounded resource use); a security flaw is a blocker, and auth, permissions, payments, migrations, and public API changes get a second review pass. That layer is a model reading code. The deterministic layer is `security_cmd` in `pipeline.json`, run by the implementer and the reviewer, required by the evidence gate, and executed by CI with `check-feature.sh --run`; and the git `pre-commit`, which runs `gitleaks protect --staged` when `gitleaks` is installed and says so when it is not. The pipeline ships no scanner of its own; the repo chooses one.
@@ -121,6 +131,10 @@ One session per repo. For a feature that spans two repos, run the pipeline in ea
 Where a feature is: `cat docs/features/<slug>/state.json`, or the `start` stage.
 
 How big it is: `estimate <slug>` at any point after `ticket.md` exists. It writes `estimate.md` for an engineer driving the pipeline with agents: human hours and calendar days by stage, the parts AI does not shorten (environment testing, other teams, approvals) listed apart, a worst case made of named risks (trigger, early detection, cost), unknowns priced but not counted, and a comparison with the ticket's points, calibrated on the review rounds and calendar time of past features in the same repo. Run it when the ticket lands to challenge its points, and again after `handoff` when the task list exists.
+
+## The board
+
+`python3 board/serve.py` opens Gates, a local read-only board at `http://localhost:7777`: every gate waiting on you across your repos with the command that resumes it, one card per feature with its stage track, running roles, and pending rule candidates. It reads the pipeline's files from the clones you list in `board/board.local.json` and writes nothing; see `board/README.md`.
 
 ## Scope guardrails
 

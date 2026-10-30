@@ -1,5 +1,7 @@
 #!/usr/bin/env bash
-# SubagentStop hook. Appends one line per finished subagent to docs/pipeline/agent-runs.log for retros.
+# SubagentStart and SubagentStop hook. Appends one line per event to docs/pipeline/agent-runs.log:
+#   <utc> event=start|stop agent=<role> session=<id> ...
+# retro reads it for turn counts; the board (board/serve.py) pairs start and stop lines to show running roles.
 # Also records the top-level input keys once, so the agent-name field can be confirmed against the running Claude Code version.
 set -u
 INPUT=$(cat)
@@ -14,5 +16,6 @@ if [ -z "$agent" ]; then
 fi
 sid=$(printf '%s' "$INPUT" | jq -r '.session_id // ""')
 keys=$(printf '%s' "$INPUT" | jq -r 'keys|join(",")')
-echo "$ts agent=${agent:-unknown} session=$sid keys=$keys" >> "$ROOT/docs/pipeline/agent-runs.log"
+ev=$(printf '%s' "$INPUT" | jq -r '.hook_event_name // ""'); case "$ev" in SubagentStart) ev=start ;; *) ev=stop ;; esac
+echo "$ts event=$ev agent=${agent:-unknown} session=$sid keys=$keys" >> "$ROOT/docs/pipeline/agent-runs.log"
 exit 0

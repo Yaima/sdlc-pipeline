@@ -1,7 +1,9 @@
 /* sdlc-pipeline board: design tokens.
-   This is the only file to edit for a retheme. Components reference these names and nothing else.
-   Naming follows Material Design 3 roles (md-sys-*) so the mapping to any Material library is direct;
-   the sdlc-* block holds the pipeline's own semantics (stages, verdicts, severities, tiers). */
+   Palette: paper and ink with a deep teal primary (light); the dark theme uses the AgentTrust ID brand navy (layered blue surfaces, translucent blue borders, cobalt primary). Typeface: Manrope for the
+   interface (shared with the AgentTrust ID brand), IBM Plex Mono for code values. The board follows the OS color
+   scheme; data-theme on <html> overrides it. This is the only file to edit for a retheme. Components reference these
+   names and nothing else. Role names follow Material Design 3 (md-sys-*); the sdlc-* block holds the pipeline's own
+   semantics (stages, verdicts, severities). */
 
 :root {
   /* ---- Reference palette (change these, the roles below derive from them) ---- */
@@ -55,56 +57,56 @@
   --md-sys-color-outline-variant: var(--ref-neutral-80);
   --md-sys-color-inverse-surface: var(--ref-neutral-20);
   --md-sys-color-inverse-on-surface: var(--ref-neutral-95);
+  --md-sys-color-accent: var(--ref-teal-40);
 
-  /* ---- Pipeline semantics ---- */
-  /* Stage track, following the status convention shared by GitLab, GitHub Actions, and Argo CD:
-     green = passed, blue/teal = in progress, amber = needs a person, red = failed/stopped, grey = not started. */
+  /* ---- Pipeline semantics ----
+     Stage track, following the status convention shared by GitLab, GitHub Actions, and Argo CD:
+     green = passed, blue = in progress, amber = needs a person, red = failed/stopped, grey = not started. */
   --sdlc-stage-done: var(--md-sys-color-tertiary);
   --sdlc-stage-current: var(--md-sys-color-primary);
   --sdlc-stage-waiting: var(--md-sys-color-secondary);
   --sdlc-stage-stopped: var(--md-sys-color-error);
   --sdlc-stage-ahead: var(--md-sys-color-outline-variant);
   --sdlc-stage-current-ring: var(--ref-teal-80);
-  /* States that need a person */
   --sdlc-waiting-bg: var(--md-sys-color-secondary-container);
   --sdlc-waiting-fg: var(--md-sys-color-on-secondary-container);
   --sdlc-waiting-accent: var(--md-sys-color-secondary);
-  /* Verdicts and QA */
   --sdlc-approve-bg: var(--md-sys-color-tertiary-container);
   --sdlc-approve-fg: var(--md-sys-color-on-tertiary-container);
   --sdlc-changes-bg: var(--md-sys-color-secondary-container);
   --sdlc-changes-fg: var(--md-sys-color-on-secondary-container);
   --sdlc-blocked-bg: var(--md-sys-color-error-container);
   --sdlc-blocked-fg: var(--md-sys-color-on-error-container);
-  /* Running agent */
   --sdlc-live: var(--md-sys-color-primary);
-  /* Severities, as text color on a neutral chip */
   --sdlc-sev-blocker: var(--md-sys-color-error);
   --sdlc-sev-major: var(--md-sys-color-secondary);
   --sdlc-sev-minor: var(--md-sys-color-on-surface-variant);
   --sdlc-sev-nit: var(--md-sys-color-outline);
 
-  /* ---- Typography (Material 3 scale on IBM Plex) ---- */
-  --md-ref-typeface-plain: "IBM Plex Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+  /* ---- Typography: Manrope for the interface, IBM Plex Mono for values that are code ---- */
+  --md-ref-typeface-plain: "Manrope", "Space Grotesk", system-ui, -apple-system, "Segoe UI", sans-serif;
   --md-ref-typeface-code: "IBM Plex Mono", ui-monospace, "SFMono-Regular", Menlo, monospace;
-  --md-sys-typescale-display-small: 500 36px/44px var(--md-ref-typeface-plain);
-  --md-sys-typescale-headline-small: 500 24px/32px var(--md-ref-typeface-plain);
-  --md-sys-typescale-title-large: 500 22px/28px var(--md-ref-typeface-plain);
-  --md-sys-typescale-title-medium: 600 16px/24px var(--md-ref-typeface-plain);
-  --md-sys-typescale-title-small: 600 14px/20px var(--md-ref-typeface-plain);
-  --md-sys-typescale-body-large: 400 16px/24px var(--md-ref-typeface-plain);
-  --md-sys-typescale-body-medium: 400 14px/20px var(--md-ref-typeface-plain);
-  --md-sys-typescale-body-small: 400 12px/16px var(--md-ref-typeface-plain);
-  --md-sys-typescale-label-large: 500 14px/20px var(--md-ref-typeface-plain);
-  --md-sys-typescale-label-medium: 500 12px/16px var(--md-ref-typeface-plain);
-  --md-sys-typescale-code: 400 13px/20px var(--md-ref-typeface-code);
-  --md-sys-typescale-code-small: 400 12px/16px var(--md-ref-typeface-code);
+  --md-sys-typescale-display-small: 800 36px/1.15 var(--md-ref-typeface-plain);
+  --md-sys-typescale-headline-small: 800 26px/1.2 var(--md-ref-typeface-plain);
+  --md-sys-typescale-title-large: 700 22px/1.25 var(--md-ref-typeface-plain);
+  --md-sys-typescale-title-medium: 700 16px/1.4 var(--md-ref-typeface-plain);
+  --md-sys-typescale-title-small: 700 14px/1.4 var(--md-ref-typeface-plain);
+  --md-sys-typescale-body-large: 400 16px/1.6 var(--md-ref-typeface-plain);
+  --md-sys-typescale-body-medium: 400 14px/1.55 var(--md-ref-typeface-plain);
+  --md-sys-typescale-body-small: 400 12.5px/1.5 var(--md-ref-typeface-plain);
+  --md-sys-typescale-label-large: 600 14px/1.4 var(--md-ref-typeface-plain);
+  --md-sys-typescale-label-medium: 600 12px/1.35 var(--md-ref-typeface-plain);
+  --md-sys-typescale-code: 400 13px/1.55 var(--md-ref-typeface-code);
+  --md-sys-typescale-code-small: 400 12px/1.4 var(--md-ref-typeface-code);
+  --type-tracking-headline: -0.02em;   /* Manrope display and headline tracking per the brand */
+  --type-tracking-title: -0.01em;
 
   /* ---- Shape ---- */
   --md-sys-shape-corner-none: 0;
   --md-sys-shape-corner-extra-small: 4px;
   --md-sys-shape-corner-small: 8px;
   --md-sys-shape-corner-medium: 12px;
+  --md-sys-shape-corner-large: 16px;
   --md-sys-shape-corner-full: 999px;
 
   /* ---- Spacing (4px base) ---- */
@@ -115,6 +117,9 @@
   --md-sys-elevation-0: none;
   --md-sys-elevation-1: 0 0 0 1px var(--md-sys-color-outline-variant);
   --md-sys-elevation-2: 0 1px 2px rgba(23, 32, 40, 0.14), 0 0 0 1px var(--md-sys-color-outline-variant);
+  --shadow-glow: none;
+  --gradient-brand: var(--md-sys-color-primary);
+  --gradient-app: none;
 
   /* ---- State layers ---- */
   --md-sys-state-hover-opacity: 0.08;
@@ -129,22 +134,19 @@
   /* ---- Layout: Material 3 window size classes. Components switch at these widths. ----
      compact  < 600px   phone: bottom navigation bar, one column, gutter 16
      medium   600-839   tablet portrait: navigation rail, one column, gutter 24
-     expanded 840-1199  tablet landscape, small laptop: rail, two columns
-     large    >= 1200   desktop: rail, content capped at --layout-content-max
-     Breakpoints are not CSS variables (media queries cannot read them); they are written in components.css
-     and repeated here so a retheme sees them in one place. */
-  --layout-rail-width: 80px;   /* Material 3 navigation rail */
-  --layout-drawer-width: 240px;   /* the rail opens into a drawer at 1600px and up */
+     expanded 840-1199  tablet landscape, small laptop: rail, cards fill by width
+     large    >= 1200   desktop: rail, content centered and capped; drawer from 1600 */
+  --layout-rail-width: 80px;
+  --layout-drawer-width: 240px;
   --layout-bottom-bar-height: 80px;
   --layout-content-max: 1280px;
   --layout-gutter: var(--sp-6);
   --layout-gutter-narrow: var(--sp-4);
 
   /* ---- Accessibility floors (WCAG 2.2 AA) ----
-     Text contrast 4.5:1, large text and UI parts 3:1, focus indicator 3:1 against its surroundings (2.4.11/2.4.13),
-     pointer targets 24x24 CSS px minimum (2.5.8), 44x44 preferred for primary actions,
-     status is always color plus a word (1.4.1), motion respects prefers-reduced-motion (2.3.3).
-     The contrast ratios of this palette are listed in README.md and checked by board/design/check-contrast.py. */
+     Text 4.5:1, large text and UI parts 3:1, focus ring 3:1 (2.4.11/2.4.13), targets 24px min (2.5.8),
+     44px for primary actions, status always color plus a word (1.4.1), reduced motion respected (2.3.3).
+     check-contrast.py verifies the pairs the components use, in both themes. */
   --a11y-target-min: 24px;
   --a11y-target-comfortable: 44px;
   --a11y-focus-ring: 3px solid var(--md-sys-color-primary);
@@ -156,71 +158,73 @@
 /* ---- Dark: same roles, different values. Applies with the OS setting unless data-theme forces one. ---- */
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) {
-    --md-sys-color-primary: var(--ref-teal-80);
-    --md-sys-color-on-primary: #00363c;
-    --md-sys-color-primary-container: #0b4f58;
-    --md-sys-color-on-primary-container: var(--ref-teal-90);
-    --md-sys-color-secondary: #e9b84a;
-    --md-sys-color-on-secondary: #3d2a00;
-    --md-sys-color-secondary-container: #5a3f00;
-    --md-sys-color-on-secondary-container: var(--ref-amber-90);
-    --md-sys-color-tertiary: #8fd5a8;
-    --md-sys-color-tertiary-container: #1b5533;
-    --md-sys-color-on-tertiary-container: var(--ref-green-90);
-    --md-sys-color-error: #f2b8b5;
-    --md-sys-color-on-error: #601410;
-    --md-sys-color-error-container: #8c1d18;
-    --md-sys-color-on-error-container: var(--ref-red-90);
-    --md-sys-color-surface: #10161c;
-    --md-sys-color-surface-dim: #0c1116;
-    --md-sys-color-surface-bright: #2b343d;
-    --md-sys-color-surface-container-lowest: #0a0f13;
-    --md-sys-color-surface-container-low: #151c23;
-    --md-sys-color-surface-container: #1a2129;
-    --md-sys-color-surface-container-high: #232c35;
-    --md-sys-color-surface-container-highest: #2e3741;
-    --md-sys-color-on-surface: #e3e8ec;
-    --md-sys-color-on-surface-variant: #b4bec7;
-    --md-sys-color-outline: #7f8a95;
-    --md-sys-color-outline-variant: #3a444e;
-    --md-sys-color-inverse-surface: #e3e8ec;
-    --md-sys-color-inverse-on-surface: #1a2129;
-    --sdlc-stage-current-ring: #0b4f58;
-    --md-sys-elevation-2: 0 1px 2px rgba(0, 0, 0, 0.5), 0 0 0 1px var(--md-sys-color-outline-variant);
+    --md-sys-color-primary: #6890ff;
+    --md-sys-color-on-primary: #061127;
+    --md-sys-color-primary-container: #1a2d5a;
+    --md-sys-color-on-primary-container: #dbe5ff;
+    --md-sys-color-secondary: #f2b14a;
+    --md-sys-color-on-secondary: #1a1208;
+    --md-sys-color-secondary-container: #3a2d18;
+    --md-sys-color-on-secondary-container: #ffe2ad;
+    --md-sys-color-tertiary: #42cc84;
+    --md-sys-color-tertiary-container: #1a3a2a;
+    --md-sys-color-on-tertiary-container: #bdf0d3;
+    --md-sys-color-error: #f2708b;
+    --md-sys-color-on-error: #1a0a10;
+    --md-sys-color-error-container: #3a1f28;
+    --md-sys-color-on-error-container: #ffd3dc;
+    --md-sys-color-surface: #08162f;
+    --md-sys-color-surface-dim: #061127;
+    --md-sys-color-surface-bright: #18305a;
+    --md-sys-color-surface-container-lowest: #07132a;
+    --md-sys-color-surface-container-low: #0b1a35;
+    --md-sys-color-surface-container: #0f1e3a;
+    --md-sys-color-surface-container-high: #122648;
+    --md-sys-color-surface-container-highest: #18305a;
+    --md-sys-color-on-surface: #eef4ff;
+    --md-sys-color-on-surface-variant: #a9b8d8;
+    --md-sys-color-outline: #5878b8;
+    --md-sys-color-outline-variant: #243a5e;
+    --md-sys-color-inverse-surface: #eef4ff;
+    --md-sys-color-inverse-on-surface: #061127;
+    --md-sys-color-accent: #7ed9ff;
+    --sdlc-stage-current-ring: #1a2d5a;
+    --md-sys-elevation-2: 0 1px 2px rgba(0, 0, 0, 0.45), 0 0 0 1px var(--md-sys-color-outline-variant);
     color-scheme: dark;
   }
 }
 :root[data-theme="dark"] {
-  --md-sys-color-primary: var(--ref-teal-80);
-  --md-sys-color-on-primary: #00363c;
-  --md-sys-color-primary-container: #0b4f58;
-  --md-sys-color-on-primary-container: var(--ref-teal-90);
-  --md-sys-color-secondary: #e9b84a;
-  --md-sys-color-on-secondary: #3d2a00;
-  --md-sys-color-secondary-container: #5a3f00;
-  --md-sys-color-on-secondary-container: var(--ref-amber-90);
-  --md-sys-color-tertiary: #8fd5a8;
-  --md-sys-color-tertiary-container: #1b5533;
-  --md-sys-color-on-tertiary-container: var(--ref-green-90);
-  --md-sys-color-error: #f2b8b5;
-  --md-sys-color-on-error: #601410;
-  --md-sys-color-error-container: #8c1d18;
-  --md-sys-color-on-error-container: var(--ref-red-90);
-  --md-sys-color-surface: #10161c;
-  --md-sys-color-surface-dim: #0c1116;
-  --md-sys-color-surface-bright: #2b343d;
-  --md-sys-color-surface-container-lowest: #0a0f13;
-  --md-sys-color-surface-container-low: #151c23;
-  --md-sys-color-surface-container: #1a2129;
-  --md-sys-color-surface-container-high: #232c35;
-  --md-sys-color-surface-container-highest: #2e3741;
-  --md-sys-color-on-surface: #e3e8ec;
-  --md-sys-color-on-surface-variant: #b4bec7;
-  --md-sys-color-outline: #7f8a95;
-  --md-sys-color-outline-variant: #3a444e;
-  --md-sys-color-inverse-surface: #e3e8ec;
-  --md-sys-color-inverse-on-surface: #1a2129;
-  --sdlc-stage-current-ring: #0b4f58;
-  --md-sys-elevation-2: 0 1px 2px rgba(0, 0, 0, 0.5), 0 0 0 1px var(--md-sys-color-outline-variant);
+  --md-sys-color-primary: #6890ff;
+  --md-sys-color-on-primary: #061127;
+  --md-sys-color-primary-container: #1a2d5a;
+  --md-sys-color-on-primary-container: #dbe5ff;
+  --md-sys-color-secondary: #f2b14a;
+  --md-sys-color-on-secondary: #1a1208;
+  --md-sys-color-secondary-container: #3a2d18;
+  --md-sys-color-on-secondary-container: #ffe2ad;
+  --md-sys-color-tertiary: #42cc84;
+  --md-sys-color-tertiary-container: #1a3a2a;
+  --md-sys-color-on-tertiary-container: #bdf0d3;
+  --md-sys-color-error: #f2708b;
+  --md-sys-color-on-error: #1a0a10;
+  --md-sys-color-error-container: #3a1f28;
+  --md-sys-color-on-error-container: #ffd3dc;
+  --md-sys-color-surface: #08162f;
+  --md-sys-color-surface-dim: #061127;
+  --md-sys-color-surface-bright: #18305a;
+  --md-sys-color-surface-container-lowest: #07132a;
+  --md-sys-color-surface-container-low: #0b1a35;
+  --md-sys-color-surface-container: #0f1e3a;
+  --md-sys-color-surface-container-high: #122648;
+  --md-sys-color-surface-container-highest: #18305a;
+  --md-sys-color-on-surface: #eef4ff;
+  --md-sys-color-on-surface-variant: #a9b8d8;
+  --md-sys-color-outline: #5878b8;
+  --md-sys-color-outline-variant: #243a5e;
+  --md-sys-color-inverse-surface: #eef4ff;
+  --md-sys-color-inverse-on-surface: #061127;
+  --md-sys-color-accent: #7ed9ff;
+  --sdlc-stage-current-ring: #1a2d5a;
+  --md-sys-elevation-2: 0 1px 2px rgba(0, 0, 0, 0.45), 0 0 0 1px var(--md-sys-color-outline-variant);
   color-scheme: dark;
 }

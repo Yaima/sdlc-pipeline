@@ -93,13 +93,18 @@ python3 - "$DST/.claude/settings.json" "$DST/docs/pipeline/pipeline.json" <<'EOF
 import json,sys
 sp,pp=sys.argv[1],sys.argv[2]; s=json.load(open(sp)); c=json.load(open(pp))
 allow=["Bash(git status:*)","Bash(git diff:*)","Bash(git log:*)","Bash(git show:*)","Bash(git branch:*)","Bash(git ls-files:*)","Bash(git hash-object:*)","Bash(git stash create)","Bash(git worktree:*)"]
+def rules(v):
+    v=(v or "").strip()
+    if not v: return []
+    if "{file}" in v:                      # placeholder commands: allow the prefix before the placeholder
+        pre=v.split("{file}",1)[0].strip()
+        return [f"Bash({pre}:*)"] if pre else []
+    return [f"Bash({v})", f"Bash({v}:*)"]
 for k in ("test_cmd","test_file_cmd","lint_cmd","typecheck_cmd","security_cmd","format_cmd","coverage_cmd"):
-    v=(c.get(k) or "").strip()
-    if v: allow += [f"Bash({v})", f"Bash({v}:*)"]
+    allow += rules(c.get(k))
 for ext,cfg in (c.get("languages") or {}).items():
     for k in ("test_cmd","lint_cmd","format_cmd"):
-        v=(cfg.get(k) or "").strip()
-        if v: allow += [f"Bash({v})", f"Bash({v}:*)"]
+        allow += rules(cfg.get(k))
 s.setdefault("permissions",{})["allow"]=list(dict.fromkeys(allow))
 json.dump(s,open(sp,"w"),indent=2); open(sp,"a").write("\n")
 EOF2

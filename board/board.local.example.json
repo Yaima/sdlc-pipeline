@@ -1,0 +1,7 @@
+{
+  "$comment": "Copy to board/board.local.json (gitignored). repos: clones to show. roots: scanned two levels deep for repos with docs/pipeline/VERSION.",
+  "repos": ["~/src/your-repo"],
+  "roots": ["~/Development"],
+  "port": 7777,
+  "stale_minutes": 120
+}
