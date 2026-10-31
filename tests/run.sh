@@ -416,7 +416,7 @@ t  "POST without X-Gates is refused" bash -c "[ \"\$(curl -s -o /dev/null -w '%{
 t  "POST with a bad path is refused" bash -c "[ \"\$(curl -s -o /dev/null -w '%{http_code}' -H 'X-Gates: 1' -X POST http://127.0.0.1:$BP/api/repos -d '{\"path\":\"$TMP/nope\"}')\" = 400 ]"
 t  "add and install through the API" bash -c "curl -s -H 'X-Gates: 1' -X POST http://127.0.0.1:$BP/api/repos -d '{\"path\":\"$NR\",\"install\":true,\"mode\":\"guards-only\"}' | jq -e '.installed == true'"
 t  "install wrote the repo's VERSION" bash -c "[ \"\$(cat '$NR/docs/pipeline/VERSION')\" = '$VERSION' ]"
-t  "config file lists the repo" jq -e --arg p "$NR" '.repos | index($p) != null' "$BC"
+t  "config file lists the repo" jq -e --arg p "$(cd "$NR" && pwd -P)" '.repos | index($p) != null' "$BC"   # stored resolved: macOS $TMPDIR is a symlink
 t  "state reports the new repo" bash -c "curl -s http://127.0.0.1:$BP/api/state | jq -e --arg n \"\$(basename '$NR')\" '.repos[] | select(.name==\$n)'"
 t  "browse lists the scratch dir" bash -c "curl -s 'http://127.0.0.1:$BP/api/browse?path=$TMP' | jq -e '.dirs | map(.name) | index(\"newrepo\") != null'"
 t  "remove through the API" bash -c "curl -s -H 'X-Gates: 1' -X POST http://127.0.0.1:$BP/api/repos/remove -d '{\"path\":\"$NR\"}' | jq -e '.removed'"
